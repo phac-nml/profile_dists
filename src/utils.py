@@ -39,27 +39,28 @@ def is_all_same_len(unique_values):
     l = set()
     for idx,value in enumerate(unique_values):
         if value != '0':
-            l.add(len(value))
+            l.add(len(str(value)))
     if len(l) == 1:
         status = True
     else:
         status = False
     return status
 
-@jit(nopython=True)
+
 def contains_integers(unique_values):
     status = False
     for idx, value in enumerate(unique_values):
-        if value.isdigit():
+        if isinstance(value, int) or value.isdigit():
             status = True
             break
     return status
 
-@jit(nopython=True)
 def contains_alpha(unique_values):
     status = False
     for idx, value in enumerate(unique_values):
-        if not value.isdigit():
+        if isinstance(value, int) or isinstance(value, float):
+            continue
+        if re.search('[a-zA-Z]+',value):
             status = True
             break
     return status
@@ -74,10 +75,13 @@ def convert_allele_codes(unique_values,method):
         else:
             value = re.sub(r'.+-','0',str(value))
             value = re.sub(r'[A-Z]+', '0', str(value))
-            converted_values[unique_values[idx]] = int(value)
+            if value == '0':
+                converted_values[unique_values[idx]] = 0
+            else:
+                converted_values[unique_values[idx]] = int(value)
     return converted_values
 
-@jit(nopython=True)
+
 def update_column_map(c1,c2):
     for k in c2:
         if not k in c1:
@@ -129,7 +133,7 @@ def process_profile(profile_path,format="text",column_mapping={}):
         )
 
     columns = df.columns.values.tolist()
-    column_dtypes = List(df.dtypes.tolist())
+    column_dtypes = df.dtypes.tolist()
     is_correct_format = is_all_columns_int(column_dtypes)
 
     #If all columns are already integers then skip the extra processing steps
@@ -178,13 +182,13 @@ def count_missing(p):
 
 @jit(nopython=True)
 def get_distance_raw(p1, p2):
-    count_match = 0
+    count = 0
     for v1,v2 in zip(p1,p2):
         if v1 == 0 or v2 == 0:
             continue
-        if v1 == v2:
-            count_match+=1
-    return count_match
+        if v1 != v2:
+            count+=1
+    return count
 
 @jit(nopython=True)
 def get_distance_scaled(p1, p2):
