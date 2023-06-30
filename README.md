@@ -78,9 +78,9 @@ Supported profile formats
 |  S3  |	1  |  2  |  2  |  2  |  1  |  5  |  1  | 
 |  S4  |	1  |  2  |  3  |  2  |  1  |  6  |  1  | 
 |  S5  |	1  |  2  |  ?  |  2  |  1  |  8  |  1  | 
-|  S6  |	2  |  3 |  3  |  ?  |  ?  |  9  |  ?  | 
+|  S6  |	2  |  3 |  3  |  -  |  ?  |  9  |  0  | 
 
-- Direct support for missing data in the form of ?, 0, - or space
+- Direct support for missing data in the form of ?, 0, -, None or space
 
 
 **chewBBACA**
@@ -120,7 +120,7 @@ Output Profile
 |  S3  |	1  |  2  |  2  |  2  |  1  |  5  |  1  | 
 |  S4  |	1  |  2  |  3  |  2  |  1  |  6  |  1  | 
 |  S5  |	1  |  2  |  0  |  2  |  1  |  8  |  1  | 
-|  S6  |	2  |  3 |  3  |  0  |  ?  |  9  |  0  | 
+|  S6  |	2  |  3 |  3  |  0  |  0  |  9  |  0  | 
 
 - All columns are converted to contain only integers with missing data represented as a 0
 
