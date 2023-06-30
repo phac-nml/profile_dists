@@ -73,12 +73,9 @@ def convert_allele_codes(unique_values,method):
         elif method == 'hash':
             converted_values[unique_values[idx]] = idx+1
         else:
-            value = re.sub(r'.+-','0',str(value))
-            value = re.sub(r'[A-Z]+', '0', str(value))
-            if value == '0':
-                converted_values[unique_values[idx]] = 0
-            else:
-                converted_values[unique_values[idx]] = int(value)
+            if re.search('[a-zA-Z]+',value) or re.search('\.|~|-',value):
+                value = '0'
+            converted_values[unique_values[idx]] = int(value)
     return converted_values
 
 
@@ -143,17 +140,18 @@ def process_profile(profile_path,format="text",column_mapping={}):
     df = df.replace('?', '0', regex=False)
     df = df.replace(' ', '0', regex=False)
     df = df.replace('-', '0', regex=False)
+    df = df.replace('', '0', regex=False)
 
     for column in columns:
         unique_col_values = sorted(df[column].unique().tolist())
         method = guess_format(List(unique_col_values))
+        print(method)
         if not column in column_mapping:
             column_mapping[column] = convert_allele_codes(unique_col_values, method)
         else:
             update_column_map(column_mapping[column], convert_allele_codes(unique_col_values, method))
 
-        df[column].map(column_mapping[column])
-
+        df[column] = df[column].map(column_mapping[column])
     return (column_mapping, df)
 
 
