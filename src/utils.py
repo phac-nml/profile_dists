@@ -145,7 +145,7 @@ def process_profile(profile_path,format="text",column_mapping={}):
     for column in columns:
         unique_col_values = sorted(df[column].unique().tolist())
         method = guess_format(List(unique_col_values))
-        print(method)
+
         if not column in column_mapping:
             column_mapping[column] = convert_allele_codes(unique_col_values, method)
         else:
