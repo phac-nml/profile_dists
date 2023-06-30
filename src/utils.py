@@ -50,7 +50,7 @@ def is_all_same_len(unique_values):
 def contains_integers(unique_values):
     status = False
     for idx, value in enumerate(unique_values):
-        if isinstance(value, int) or value.isdigit():
+        if isinstance(value, int) or re.search('[0-9]+',value):
             status = True
             break
     return status
@@ -67,11 +67,16 @@ def contains_alpha(unique_values):
 
 def convert_allele_codes(unique_values,method):
     converted_values = {}
+    counter = 1
     for idx,value in enumerate(unique_values):
         if method == 'int':
             converted_values[unique_values[idx]] = int(value)
         elif method == 'hash':
-            converted_values[unique_values[idx]] = idx+1
+            if value == '0':
+                converted_values[unique_values[idx]] = 0
+            else:
+                converted_values[unique_values[idx]] = counter
+                counter+=1
         else:
             if re.search('[a-zA-Z]+',value) or re.search('\.|~|-',value):
                 value = '0'
@@ -145,7 +150,6 @@ def process_profile(profile_path,format="text",column_mapping={}):
     for column in columns:
         unique_col_values = sorted(df[column].unique().tolist())
         method = guess_format(List(unique_col_values))
-
         if not column in column_mapping:
             column_mapping[column] = convert_allele_codes(unique_col_values, method)
         else:
