@@ -1,4 +1,3 @@
-import time
 import sys
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 import json
@@ -236,6 +235,4 @@ def main():
 
 # call main function
 if __name__ == '__main__':
-    stime = time.time()
     main()
-    print(time.time() - stime)
