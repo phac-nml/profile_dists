@@ -70,9 +70,9 @@ def convert_allele_codes(unique_values,method):
     counter = 1
     for idx,value in enumerate(unique_values):
         if method == 'int':
-            try:
+            if isinstance(value,int) or value.isnumeric():
                 converted_values[unique_values[idx]] = int(value)
-            except:
+            else:
                 converted_values[unique_values[idx]] = 0
         elif method == 'hash':
             if value == '0':
