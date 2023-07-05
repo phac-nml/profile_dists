@@ -2,7 +2,7 @@
 import os
 from distutils.core import setup
 from setuptools import find_packages
-from src.version import __version__
+from profile_dists.version import __version__
 author = 'James Robertson'
 
 classifiers = """
@@ -24,7 +24,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-exec(open('src/version.py').read())
+exec(open('profile_dists/version.py').read())
 
 setup(
     name='profile_dists',
@@ -42,7 +42,7 @@ setup(
         'Profile Dists: Rapid calcualtion of allele profile distances and distance base querying'),
     keywords='cgMLST, wgMLST, outbreak, surveillance, clustering, distance matrix',
     classifiers=classifiers,
-    package_dir={'profile_dists': 'src'},
+    package_dir={'profile_dists': 'profile_dists'},
     package_data={
         "": ["*.txt"],
     },
@@ -60,7 +60,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'profile_dists=src.dist:main',
+            'profile_dists=profile_dists.dist:main',
         ],
     },
 )

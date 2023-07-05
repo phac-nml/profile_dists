@@ -1,4 +1,4 @@
-from src.version import __version__
+from profile_dists.version import __version__
 MIN_FILE_SIZE = 32
 
 

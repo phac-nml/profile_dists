@@ -11,7 +11,7 @@ from numba import jit
 from numba.typed import List
 import pyarrow.parquet as pq
 import re
-from src.constants import MIN_FILE_SIZE, FILE_FORMATS, VALID_INT_TYPES
+from profile_dists.constants import MIN_FILE_SIZE, FILE_FORMATS, VALID_INT_TYPES
 
 
 def guess_format(unique_values):

@@ -4,11 +4,11 @@ from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescript
 import json
 import os
 from datetime import datetime
-from src.version import __version__
-from src.utils import process_profile, is_file_ok, compare_headers, filter_columns, \
+from profile_dists.version import __version__
+from profile_dists.utils import process_profile, is_file_ok, compare_headers, filter_columns, \
     count_missing_data, write_profiles, convert_profiles, calc_distances_scaled, calc_distances_hamming, \
     write_dist_results, calc_batch_size, get_missing_loci_counts, flag_samples, filter_samples
-from src.constants import RUN_DATA
+from profile_dists.constants import RUN_DATA
 
 def parse_args():
     """ Argument Parsing method.
