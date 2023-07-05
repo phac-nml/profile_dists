@@ -81,7 +81,7 @@ def convert_allele_codes(unique_values,method):
                 converted_values[unique_values[idx]] = counter
                 counter+=1
         else:
-            if re.search('[a-zA-Z]+',value) or re.search('\.|~|-',value):
+            if re.search('[a-zA-Z]+',value) or re.search('[^0-9a-zA-Z]+',value):
                 value = '0'
             converted_values[unique_values[idx]] = int(value)
     return converted_values
