@@ -1,4 +1,4 @@
-import shutil
+import time
 import sys
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 import json
@@ -116,7 +116,7 @@ def main():
 
     # initialize analysis directory
     if not os.path.isdir(outdir):
-        os.mkdir(outdir, 0o755)
+        os.makedirs(outdir, 0o755)
 
     (allele_map, qdf) = process_profile(query_profile,column_mapping=allele_map)
     (allele_map, rdf) = process_profile(ref_profile, column_mapping=allele_map)
@@ -236,4 +236,6 @@ def main():
 
 # call main function
 if __name__ == '__main__':
+    stime = time.time()
     main()
+    print(time.time() - stime)

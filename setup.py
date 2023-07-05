@@ -24,7 +24,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-exec(open('cladeomatic/version.py').read())
+exec(open('src/version.py').read())
 
 setup(
     name='profile_dists',
