@@ -205,11 +205,35 @@ def get_distance_scaled(p1, p2):
         count_compared_sites+=1
         if v1 == v2:
             count_match+=1
+
     if count_compared_sites:
         return 100.0 * (float(count_compared_sites) - float(count_match)) / float(count_compared_sites)
     else:
         return 100.0
 
+
+@jit(nopython=True)
+def get_distance_raw_missing(p1, p2):
+    count = 0
+    for v1, v2 in zip(p1, p2):
+        if v1 != v2:
+            count += 1
+    return count
+
+
+@jit(nopython=True)
+def get_distance_scaled_missing(p1, p2):
+    count_compared_sites = 0
+    count_match = 0
+    for v1, v2 in zip(p1, p2):
+        count_compared_sites += 1
+        if v1 == v2:
+            count_match += 1
+
+    if count_compared_sites:
+        return 100.0 * (float(count_compared_sites) - float(count_match)) / float(count_compared_sites)
+    else:
+        return 100.0
 
 def calc_batch_size(num_records,num_columns,byte_value_size):
     mem = psutil.virtual_memory()
@@ -314,7 +338,7 @@ def calc_distances_hamming(query_profiles,query_labels,ref_profiles,ref_labels,p
     for i in range(0, num_query_profiles):
         d = [ query_labels[i] ]
         for k in range(0, num_ref_profiles):
-            if not os.path.isfile(parquet_file):
+            if i != k:
                 d.append(get_distance_raw(query_profiles[i], ref_profiles[k]))
             else:
                 d.append(0)

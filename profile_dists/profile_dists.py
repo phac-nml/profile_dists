@@ -56,6 +56,8 @@ def parse_args():
                         action='store_true')
     parser.add_argument('-s', '--skip', required=False, help='Skip QA/QC steps',
                         action='store_true')
+    parser.add_argument('-n', '--count_missing', required=False, help='Count missing as differences',
+                        action='store_true')
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
 
     return parser.parse_args()
