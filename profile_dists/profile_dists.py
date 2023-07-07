@@ -4,7 +4,7 @@ import json
 import os
 from datetime import datetime
 from profile_dists.version import __version__
-from profile_dists.utils import process_profile, is_file_ok, compare_headers, filter_columns, \
+from profile_dists.utils import process_profile, is_file_ok, filter_columns, \
     count_missing_data, write_profiles, convert_profiles, calc_distances_scaled, calc_distances_hamming, \
     calc_distances_scaled_missing, calc_distances_hamming_missing,\
     write_dist_results, calc_batch_size, get_missing_loci_counts, flag_samples, filter_samples
@@ -207,9 +207,15 @@ def main():
 
     #Automatically determine batch size that fits in available memory
     num_records = len(qlabels) + len(rlabels)
+    if len(qprofiles) == 0 or len(rprofiles) == 0:
+        print(f'Error filtering parameters are too stringent there are 0 samples remaining: query:{len(qprofiles)} ref:{len(rprofiles)}')
+        sys.exit()
+
     num_columns = len(qprofiles[0])
     byte_value_size = 8  #8 bytes for float64 which is the worst case
     batch_size = calc_batch_size(num_records,num_columns,byte_value_size)
+
+
 
     #compute distances
     dist_matrix_file = os.path.join(outdir,f'dists.parquet')
