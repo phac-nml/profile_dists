@@ -360,6 +360,81 @@ def calc_distances_hamming(query_profiles,query_labels,ref_profiles,ref_labels,p
     else:
         fp.write(parquet_file, df, append=True, compression='GZIP')
 
+def calc_distances_scaled_missing(query_profiles,query_labels,ref_profiles,ref_labels,parquet_file,batch_size=1):
+
+    count = 0
+    columns = ["dists"] + [str(x) for x in ref_labels]
+    num_query_profiles = len(query_profiles)
+    num_ref_profiles = len(ref_profiles)
+    dists = []
+
+    #Clear an existing file as this can cause unexpected behaviour
+    if os.path.isfile(parquet_file):
+        os.remove(parquet_file)
+
+    for i in range(0, num_query_profiles):
+        d = [ query_labels[i] ]
+        for k in range(0, num_ref_profiles):
+            if i != k:
+                d.append(get_distance_scaled_missing(query_profiles[i], ref_profiles[k]))
+            else:
+                d.append(0)
+        dists.append(d)
+        count += 1
+
+        if count == batch_size:
+            df = pd.DataFrame(dists, columns=columns)
+            if not os.path.isfile(parquet_file):
+                fp.write(parquet_file, df, compression='GZIP')
+            else:
+                fp.write(parquet_file, df, append=True, compression='GZIP')
+            dists = []
+            count = 0
+
+    df = pd.DataFrame(dists, columns=columns)
+    if not os.path.isfile(parquet_file):
+        fp.write(parquet_file, df, compression='GZIP')
+    else:
+        fp.write(parquet_file, df, append=True, compression='GZIP')
+
+def calc_distances_hamming_missing(query_profiles,query_labels,ref_profiles,ref_labels,parquet_file,batch_size=1):
+    count = 0
+    columns = ["dists"] + ref_labels
+    num_query_profiles = len(query_profiles)
+    num_ref_profiles = len(ref_profiles)
+    dists = []
+
+    #Clear an existing file as this can cause unexpected behaviour
+    if os.path.isfile(parquet_file):
+        os.remove(parquet_file)
+
+    for i in range(0, num_query_profiles):
+        d = [ query_labels[i] ]
+        for k in range(0, num_ref_profiles):
+            if i != k:
+                d.append(get_distance_raw_missing(query_profiles[i], ref_profiles[k]))
+            else:
+                d.append(0)
+        dists.append(d)
+        count += 1
+
+        if count == batch_size:
+            df = pd.DataFrame(dists, columns=columns)
+            if not os.path.isfile(parquet_file):
+                fp.write(parquet_file, df, compression='GZIP')
+            else:
+                fp.write(parquet_file, df, append=True, compression='GZIP')
+            dists = []
+            count = 0
+
+    df = pd.DataFrame(dists, columns=columns)
+    if not os.path.isfile(parquet_file):
+        fp.write(parquet_file, df, compression='GZIP')
+    else:
+        fp.write(parquet_file, df, append=True, compression='GZIP')
+
+
+
 
 def is_file_ok(f):
     status = True

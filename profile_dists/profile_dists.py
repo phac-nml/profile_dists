@@ -6,7 +6,9 @@ from datetime import datetime
 from profile_dists.version import __version__
 from profile_dists.utils import process_profile, is_file_ok, compare_headers, filter_columns, \
     count_missing_data, write_profiles, convert_profiles, calc_distances_scaled, calc_distances_hamming, \
+    calc_distances_scaled_missing, calc_distances_hamming_missing,\
     write_dist_results, calc_batch_size, get_missing_loci_counts, flag_samples, filter_samples
+
 from profile_dists.constants import RUN_DATA
 
 def parse_args():
@@ -77,6 +79,7 @@ def main():
     match_threshold = cmd_args.match_threshold
     sample_qual_thresh = cmd_args.sample_qual_thresh
     skip = cmd_args.skip
+    count_missing_sites = cmd_args.count_missing
 
     run_data = RUN_DATA
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
@@ -212,10 +215,17 @@ def main():
     dist_matrix_file = os.path.join(outdir,f'dists.parquet')
     if os.path.isfile(dist_matrix_file):
         os.remove(dist_matrix_file)
-    if dist_method == 'scaled':
-        calc_distances_scaled(qprofiles,qlabels,rprofiles,rlabels,dist_matrix_file,batch_size)
+
+    if count_missing_sites:
+        if dist_method == 'scaled':
+            calc_distances_scaled_missing(qprofiles,qlabels,rprofiles,rlabels,dist_matrix_file,batch_size)
+        else:
+            calc_distances_hamming_missing(qprofiles, qlabels, rprofiles, rlabels, dist_matrix_file,batch_size)
     else:
-        calc_distances_hamming(qprofiles, qlabels, rprofiles, rlabels, dist_matrix_file,batch_size)
+        if dist_method == 'scaled':
+            calc_distances_scaled(qprofiles,qlabels,rprofiles,rlabels,dist_matrix_file,batch_size)
+        else:
+            calc_distances_hamming(qprofiles, qlabels, rprofiles, rlabels, dist_matrix_file,batch_size)
 
 
     #format output for output format
