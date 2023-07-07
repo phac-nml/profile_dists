@@ -278,7 +278,10 @@ def calc_distances_scaled(query_profiles,query_labels,ref_profiles,ref_labels,pa
     for i in range(0, num_query_profiles):
         d = [ query_labels[i] ]
         for k in range(0, num_ref_profiles):
-            d.append(get_distance_scaled(query_profiles[i], ref_profiles[k]))
+            if i != k:
+                d.append(get_distance_scaled(query_profiles[i], ref_profiles[k]))
+            else:
+                d.append(0)
         dists.append(d)
         count += 1
 
@@ -311,7 +314,10 @@ def calc_distances_hamming(query_profiles,query_labels,ref_profiles,ref_labels,p
     for i in range(0, num_query_profiles):
         d = [ query_labels[i] ]
         for k in range(0, num_ref_profiles):
-            d.append(get_distance_raw(query_profiles[i], ref_profiles[k]))
+            if not os.path.isfile(parquet_file):
+                d.append(get_distance_raw(query_profiles[i], ref_profiles[k]))
+            else:
+                d.append(0)
         dists.append(d)
         count += 1
 
