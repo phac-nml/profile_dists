@@ -312,6 +312,7 @@ def calc_distances_scaled(query_profiles,query_labels,ref_profiles,ref_labels,pa
     for i in range(0, num_query_profiles):
         d = [ query_labels[i] ]
         for k in range(0, num_ref_profiles):
+            print(f'{query_labels[i]} {ref_labels[k]}')
             if i != k:
                 d.append(get_distance_scaled(query_profiles[i], ref_profiles[k]))
             else:
