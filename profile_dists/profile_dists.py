@@ -52,7 +52,7 @@ def parse_args():
     parser.add_argument('--sample_qual_thresh', '-c', type=float, required=False,
                         help='Maximum percentage of missing data allowed per sample (0 - 1)',default=1.0)
     parser.add_argument('--match_threshold', '-a', type=str, required=False,
-                        help='Either a integer or float depending on what distance method is used (only used with pairwise format')
+                        help='Either a integer or float depending on what distance method is used (only used with pairwise format',default=-1)
     parser.add_argument('--mapping_file', '-m', type=float, required=False,
                         help='json formatted allele mapping')
     parser.add_argument('--max_mem',  type=int, required=False,

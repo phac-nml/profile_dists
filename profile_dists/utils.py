@@ -472,9 +472,6 @@ def format_pairwise_dist(df,threshold=-1):
     for index,row in df.iterrows():
         dists[row[0]] = {row[0]:0}
         if threshold != -1:
-            print(List(columns))
-            print(List(row[1:]))
-            print(threshold)
             dists[row[0]] = filter_dists(List(columns), List(row[1:]), threshold)
         else:
             dists[row[0]] = dict(zip(columns, row[1:]))
