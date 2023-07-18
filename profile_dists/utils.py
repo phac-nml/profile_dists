@@ -50,7 +50,7 @@ def is_all_same_len(unique_values):
 def contains_integers(unique_values):
     status = False
     for idx, value in enumerate(unique_values):
-        if isinstance(value, int) or re.search('[0-9]+',value):
+        if isinstance(value, int) or re.search('[0-9]+',str(value)):
             status = True
             break
     return status
@@ -60,7 +60,7 @@ def contains_alpha(unique_values):
     for idx, value in enumerate(unique_values):
         if isinstance(value, int) or isinstance(value, float):
             continue
-        if re.search('[a-zA-Z]+',value):
+        if re.search('[a-zA-Z]+',str(value)):
             status = True
             break
     return status
