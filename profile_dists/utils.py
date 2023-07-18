@@ -235,8 +235,9 @@ def get_distance_scaled_missing(p1, p2):
     else:
         return 100.0
 
-def calc_batch_size(num_records,num_columns,byte_value_size):
-    mem = psutil.virtual_memory()
+def calc_batch_size(num_records,num_columns,byte_value_size,mem=None):
+    if mem == None:
+        mem = psutil.virtual_memory()
     avail = mem.available
     p = (byte_value_size * num_columns) + 56
     estimated_mem_needed = p * num_records

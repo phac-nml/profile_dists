@@ -1,3 +1,4 @@
+import copy
 import sys
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 import json
@@ -54,6 +55,8 @@ def parse_args():
                         help='Either a integer or float depending on what distance method is used (only used with pairwise format')
     parser.add_argument('--mapping_file', '-m', type=float, required=False,
                         help='json formatted allele mapping')
+    parser.add_argument('--max_mem',  type=int, required=False,
+                        help='Maximum amount of memory to use',default=None)
     parser.add_argument('--force','-f', required=False, help='Overwrite existing directory',
                         action='store_true')
     parser.add_argument('-s', '--skip', required=False, help='Skip QA/QC steps',
@@ -80,6 +83,7 @@ def main():
     sample_qual_thresh = cmd_args.sample_qual_thresh
     skip = cmd_args.skip
     count_missing_sites = cmd_args.count_missing
+    max_mem = cmd_args.max_mem
 
     run_data = RUN_DATA
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
@@ -122,10 +126,19 @@ def main():
     if not os.path.isdir(outdir):
         os.makedirs(outdir, 0o755)
 
+    print(f'Reading query profile: {query_profile}')
     (allele_map, qdf) = process_profile(query_profile,column_mapping=allele_map)
-    (allele_map, rdf) = process_profile(ref_profile, column_mapping=allele_map)
 
 
+    #Skip calculation for symmetic matrix calculation on same set of data
+    if query_profile == ref_profile:
+        print(f'Reusing data from: {query_profile}')
+        rdf = copy.deepcopy(qdf)
+    else:
+        print(f'Reading reference profile: {query_profile}')
+        (allele_map, rdf) = process_profile(ref_profile, column_mapping=allele_map)
+
+    print(f'Writting allele map')
     with open(os.path.join(outdir,"allele_map.json"),'w' ) as fh:
         fh.write(json.dumps(allele_map, indent=4))
 
@@ -150,6 +163,7 @@ def main():
 
     cols_to_remove = []
     if not skip:
+        print(f'Performing QA/QC on input allele profiles')
         qmissing = count_missing_data(qdf)
         rmissing = count_missing_data(rdf)
 
@@ -183,6 +197,7 @@ def main():
     run_data['ref_profile_info']['num_samples_pass'] = run_data['ref_profile_info']['num_samples']
 
     # write updated profiles
+    print(f'Writting updated profiles to disk')
     write_profiles(qdf, os.path.join(outdir, f'query_profile.{file_type}'), file_type)
     run_data['query_profile_info']['parsed_file_path'] = os.path.join(outdir, f'query_profile.{file_type}')
     write_profiles(rdf, os.path.join(outdir, f'ref_profile.{file_type}'), file_type)
@@ -213,8 +228,8 @@ def main():
 
     num_columns = len(qprofiles[0])
     byte_value_size = 8  #8 bytes for float64 which is the worst case
-    batch_size = calc_batch_size(num_records,num_columns,byte_value_size)
-
+    batch_size = calc_batch_size(num_records,num_columns,byte_value_size,max_mem)
+    print(f'Using a batch size of {batch_size}')
 
 
     #compute distances
@@ -222,6 +237,7 @@ def main():
     if os.path.isfile(dist_matrix_file):
         os.remove(dist_matrix_file)
 
+    print(f'Calculating distances')
     if count_missing_sites:
         if dist_method == 'scaled':
             calc_distances_scaled_missing(qprofiles,qlabels,rprofiles,rlabels,dist_matrix_file,batch_size)
