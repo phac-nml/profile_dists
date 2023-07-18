@@ -249,7 +249,10 @@ def calc_batch_size(num_records,num_columns,byte_value_size,max_mem=None):
         return num_records
     avail -= profile_mem
     num_batches = int(avail / ((byte_value_size * num_records) + 56))
-    return int(num_records / num_batches)
+    batch_size = int(num_records / num_batches)
+    if batch_size <= 0:
+        batch_size = 100
+    return 100
 
 @jit(nopython=True)
 def validate_file(f):
