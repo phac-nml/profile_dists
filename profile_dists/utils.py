@@ -70,7 +70,7 @@ def convert_allele_codes(unique_values,method):
     counter = 1
     for idx,value in enumerate(unique_values):
         if method == 'int':
-            if isinstance(value,int) or value.isnumeric():
+            if isinstance(value,int) or str(value).isnumeric():
                 converted_values[unique_values[idx]] = int(value)
             else:
                 converted_values[unique_values[idx]] = 0
@@ -81,7 +81,7 @@ def convert_allele_codes(unique_values,method):
                 converted_values[unique_values[idx]] = counter
                 counter+=1
         else:
-            if re.search('[a-zA-Z]+',value) or re.search('[^0-9a-zA-Z]+',value):
+            if re.search('[a-zA-Z]+',str(value)) or re.search('[^0-9a-zA-Z]+',str(value)):
                 value = '0'
             converted_values[unique_values[idx]] = int(value)
     return converted_values
@@ -235,15 +235,21 @@ def get_distance_scaled_missing(p1, p2):
     else:
         return 100.0
 
-def calc_batch_size(num_records,num_columns,byte_value_size,mem=None):
-    if mem == None:
-        mem = psutil.virtual_memory()
-    avail = mem.available
+def calc_batch_size(num_records,num_columns,byte_value_size,max_mem=None):
+    if max_mem == None:
+        max_mem = psutil.virtual_memory()
+        avail = max_mem.available
+    else:
+        avail = max_mem
     p = (byte_value_size * num_columns) + 56
-    estimated_mem_needed = p * num_records
+    profile_mem = p * num_records * 2
+    dist_mem = ((byte_value_size * num_records) + 56) *num_records
+    estimated_mem_needed = profile_mem + dist_mem
     if estimated_mem_needed < avail:
         return num_records
-    return int(avail / p)
+    avail -= profile_mem
+    num_batches = int(avail / ((byte_value_size * num_records) + 56))
+    return int(num_records / num_batches)
 
 @jit(nopython=True)
 def validate_file(f):
