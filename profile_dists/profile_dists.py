@@ -211,15 +211,14 @@ def main():
         run_data['ref_profile_info']['num_samples_pass'] = run_data['ref_profile_info']['num_samples'] - len(ref_samples_to_remove)
 
 
-        qlabels,qprofiles = filter_samples(qlabels, qprofiles, set(query_samples_to_remove) | set(ref_samples_to_remove))
-        rlabels, rprofiles = filter_samples(rlabels, rprofiles,
-                                            set(query_samples_to_remove) | set(ref_samples_to_remove))
+        qlabels,qprofiles = filter_samples(qlabels, qprofiles, set(query_samples_to_remove) )
+        rlabels, rprofiles = filter_samples(rlabels, rprofiles, set(ref_samples_to_remove))
 
         samples_to_remove = list(set(query_samples_to_remove) | set(ref_samples_to_remove))
         print(f'Prefilter Query size {len(qdf)}')
-        qdf = qdf.drop(samples_to_remove)
+        qdf = qdf.drop(list(query_samples_to_remove))
         print(f'Postfilter Query size {len(qdf)}')
-        rdf = rdf.drop(samples_to_remove)
+        rdf = rdf.drop(list(query_samples_to_remove))
 
 
 
@@ -272,7 +271,6 @@ def main():
     write_dist_results(dist_matrix_file,
                        results_file, outfmt,
                        file_type, batch_size=batch_size, threshold=match_threshold)
-
 
     run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
