@@ -523,11 +523,11 @@ def write_dist_results(mat,outfile,outtype,outfmt,batch_size=1,threshold=-1):
             else:
                 fp.write(parquet_file, batch_df, append=True, compression='GZIP')
 
-def get_missing_loci_counts(profiles,labels):
+def get_missing_loci_counts(profiles,labels,count_loci):
     n = len(labels)
     counts = {}
     for i in range(0, n):
-        counts[labels[i]] = count_missing(profiles[i])/n
+        counts[labels[i]] = count_missing(profiles[i])/count_loci
     return counts
 
 def flag_samples(missing_counts,threshold):
