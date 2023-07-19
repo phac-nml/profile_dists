@@ -191,18 +191,6 @@ def main():
     rlabels,rprofiles = convert_profiles(rdf)
 
 
-    run_data['query_profile_info']['num_samples'] = len(qlabels)
-    run_data['query_profile_info']['num_samples_pass'] = run_data['query_profile_info']['num_samples']
-    run_data['ref_profile_info']['num_samples'] = len(qlabels)
-    run_data['ref_profile_info']['num_samples_pass'] = run_data['ref_profile_info']['num_samples']
-
-    # write updated profiles
-    print(f'Writting updated profiles to disk')
-    write_profiles(qdf, os.path.join(outdir, f'query_profile.{file_type}'), file_type)
-    run_data['query_profile_info']['parsed_file_path'] = os.path.join(outdir, f'query_profile.{file_type}')
-    write_profiles(rdf, os.path.join(outdir, f'ref_profile.{file_type}'), file_type)
-    run_data['ref_profile_info']['parsed_file_path'] = os.path.join(outdir, f'ref_profile.{file_type}')
-
     if not skip:
         # Remove poor quality samples from the comparisons
         query_missing_data_counts = get_missing_loci_counts(qprofiles, qlabels)
@@ -218,6 +206,22 @@ def main():
         qlabels,qprofiles = filter_samples(qlabels, qprofiles, set(query_samples_to_remove) | set(ref_samples_to_remove))
         rlabels, rprofiles = filter_samples(rlabels, rprofiles,
                                             set(query_samples_to_remove) | set(ref_samples_to_remove))
+
+        samples_to_remove = list(set(query_samples_to_remove) | set(ref_samples_to_remove))
+        qdf = qdf.drop(samples_to_remove)
+        rdf = rdf.drop(samples_to_remove)
+
+    run_data['query_profile_info']['num_samples'] = len(qlabels)
+    run_data['query_profile_info']['num_samples_pass'] = run_data['query_profile_info']['num_samples']
+    run_data['ref_profile_info']['num_samples'] = len(qlabels)
+    run_data['ref_profile_info']['num_samples_pass'] = run_data['ref_profile_info']['num_samples']
+
+    # write updated profiles
+    print(f'Writting updated profiles to disk')
+    write_profiles(qdf, os.path.join(outdir, f'query_profile.{file_type}'), file_type)
+    run_data['query_profile_info']['parsed_file_path'] = os.path.join(outdir, f'query_profile.{file_type}')
+    write_profiles(rdf, os.path.join(outdir, f'ref_profile.{file_type}'), file_type)
+    run_data['ref_profile_info']['parsed_file_path'] = os.path.join(outdir, f'ref_profile.{file_type}')
 
 
     #Automatically determine batch size that fits in available memory
