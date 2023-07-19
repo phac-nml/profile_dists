@@ -190,6 +190,10 @@ def main():
     qlabels,qprofiles = convert_profiles(qdf)
     rlabels,rprofiles = convert_profiles(rdf)
 
+    run_data['query_profile_info']['num_samples'] = len(qlabels)
+    run_data['query_profile_info']['num_samples_pass'] = run_data['query_profile_info']['num_samples']
+    run_data['ref_profile_info']['num_samples'] = len(qlabels)
+    run_data['ref_profile_info']['num_samples_pass'] = run_data['ref_profile_info']['num_samples']
 
     if not skip:
         # Remove poor quality samples from the comparisons
@@ -208,13 +212,11 @@ def main():
                                             set(query_samples_to_remove) | set(ref_samples_to_remove))
 
         samples_to_remove = list(set(query_samples_to_remove) | set(ref_samples_to_remove))
+        print(samples_to_remove)
         qdf = qdf.drop(samples_to_remove)
         rdf = rdf.drop(samples_to_remove)
 
-    run_data['query_profile_info']['num_samples'] = len(qlabels)
-    run_data['query_profile_info']['num_samples_pass'] = run_data['query_profile_info']['num_samples']
-    run_data['ref_profile_info']['num_samples'] = len(qlabels)
-    run_data['ref_profile_info']['num_samples_pass'] = run_data['ref_profile_info']['num_samples']
+
 
     # write updated profiles
     print(f'Writting updated profiles to disk')
@@ -223,6 +225,9 @@ def main():
     write_profiles(rdf, os.path.join(outdir, f'ref_profile.{file_type}'), file_type)
     run_data['ref_profile_info']['parsed_file_path'] = os.path.join(outdir, f'ref_profile.{file_type}')
 
+    #Data frames no longer needed
+    del(qdf)
+    del (rdf)
 
     #Automatically determine batch size that fits in available memory
     num_records = len(qlabels) + len(rlabels)
