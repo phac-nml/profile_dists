@@ -53,8 +53,10 @@ def parse_args():
                         help='Maximum percentage of missing data allowed per sample (0 - 1)',default=1.0)
     parser.add_argument('--match_threshold', '-a', type=str, required=False,
                         help='Either a integer or float depending on what distance method is used (only used with pairwise format',default=-1)
-    parser.add_argument('--mapping_file', '-m', type=float, required=False,
+    parser.add_argument('--mapping_file', '-m', type=str, required=False,
                         help='json formatted allele mapping')
+    parser.add_argument('--batch_size',  type=int, required=False,
+                        help='Manual selection of how many records should be included in a batch, default=auto')
     parser.add_argument('--max_mem',  type=int, required=False,
                         help='Maximum amount of memory to use',default=None)
     parser.add_argument('--force','-f', required=False, help='Overwrite existing directory',
@@ -84,6 +86,7 @@ def main():
     skip = cmd_args.skip
     count_missing_sites = cmd_args.count_missing
     max_mem = cmd_args.max_mem
+    batch_size = cmd_args.batch_size
 
     run_data = RUN_DATA
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
@@ -237,9 +240,11 @@ def main():
         print(f'Error filtering parameters are too stringent there are 0 samples remaining: query:{len(qprofiles)} ref:{len(rprofiles)}')
         sys.exit()
 
+
     num_columns = len(qprofiles[0])
     byte_value_size = 8  #8 bytes for float64 which is the worst case
-    batch_size = calc_batch_size(num_records,num_columns,byte_value_size,max_mem)
+    if batch_size is None:
+        batch_size = calc_batch_size(num_records,num_columns,byte_value_size,max_mem)
     print(f'Using a batch size of {batch_size}')
 
 
