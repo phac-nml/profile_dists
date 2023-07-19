@@ -314,7 +314,6 @@ def calc_distances_scaled(query_profiles,query_labels,ref_profiles,ref_labels,pa
     for i in range(0, num_query_profiles):
         d = [ query_labels[i] ]
         for k in range(0, num_ref_profiles):
-            print(f'{query_labels[i]} {ref_labels[k]}')
             if i != k:
                 d.append(get_distance_scaled(query_profiles[i], ref_profiles[k]))
             else:
@@ -549,5 +548,3 @@ def filter_samples(labels,profiles,labels_to_remove):
         p.append(profiles[idx])
     return l, p
 
-
-#write_dist_results('/Users/jrobertson/Desktop/ListeraClusterComp/BioNumerics.alleles.profiles5.parquet','/Users/jrobertson/Desktop/ListeraClusterComp/BioNumerics.alleles.profiles5.csv','pairwise','text',batch_size=500,threshold=10)
