@@ -196,8 +196,10 @@ def main():
     run_data['ref_profile_info']['num_samples_pass'] = run_data['ref_profile_info']['num_samples']
 
     if not skip:
+        print(f'Performing QA/QC on input sample profiles')
         # Remove poor quality samples from the comparisons
         query_missing_data_counts = get_missing_loci_counts(qprofiles, qlabels)
+        print(query_missing_data_counts)
         ref_missing_data_counts = get_missing_loci_counts(rprofiles, rlabels)
         query_samples_to_remove = flag_samples(query_missing_data_counts, sample_qual_thresh)
         run_data['query_profile_info']['failed_samples'] = query_samples_to_remove
@@ -213,7 +215,9 @@ def main():
 
         samples_to_remove = list(set(query_samples_to_remove) | set(ref_samples_to_remove))
         print(samples_to_remove)
+        print(f'Prefilter Query size {len(qdf)}')
         qdf = qdf.drop(samples_to_remove)
+        print(f'Postfilter Query size {len(qdf)}')
         rdf = rdf.drop(samples_to_remove)
 
 
