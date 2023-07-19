@@ -252,7 +252,9 @@ def calc_batch_size(num_records,num_columns,byte_value_size,max_mem=None):
     batch_size = int(num_records / num_batches)
     if batch_size <= 0:
         batch_size = 100
-    return 100
+    elif batch_size > num_records:
+        batch_size = num_records
+    return batch_size
 
 @jit(nopython=True)
 def validate_file(f):
