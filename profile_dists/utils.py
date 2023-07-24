@@ -242,7 +242,7 @@ def calc_batch_size(num_records,num_columns,byte_value_size,max_mem=None):
     else:
         avail = max_mem
     p = (byte_value_size * num_columns) + 56
-    profile_mem = p * num_records * 2
+    profile_mem = p * num_records * 3
     dist_mem = ((byte_value_size * num_records) + 56) *num_records
     estimated_mem_needed = profile_mem + dist_mem
     if estimated_mem_needed < avail:
@@ -504,7 +504,7 @@ def write_dist_results(mat,outfile,outtype,outfmt,batch_size=1,threshold=-1):
     parquet_file = pq.ParquetFile(mat)
     for batch in parquet_file.iter_batches(batch_size):
         batch_df = batch.to_pandas()
-
+        del (batch)
         if outtype == 'pairwise':
             batch_df = format_pairwise_dist(batch_df, threshold=threshold)
         if init_file:
@@ -523,6 +523,7 @@ def write_dist_results(mat,outfile,outtype,outfmt,batch_size=1,threshold=-1):
                 batch_df.to_csv(outfile, mode ='a', index = False, header = False, sep="\t")
             else:
                 fp.write(parquet_file, batch_df, append=True, compression='GZIP')
+
 
 def get_missing_loci_counts(profiles,labels,count_loci):
     n = len(labels)
