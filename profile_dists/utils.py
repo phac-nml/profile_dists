@@ -350,18 +350,21 @@ def calc_batch_size(num_records,num_columns,byte_value_size,max_mem=None):
     else:
         avail = max_mem
     p = (byte_value_size * num_columns) + 56
-    profile_mem = p * num_records * 3
-    dist_mem = ((byte_value_size * num_records) + 56) *num_records
+    profile_mem = p * num_records * 4
+    dist_mem = ((byte_value_size * num_records) + 56) * num_records
     estimated_mem_needed = profile_mem + dist_mem
     if estimated_mem_needed < avail:
         return num_records
+
     avail -= profile_mem
     num_batches = int(avail / ((byte_value_size * num_records) + 56))
     batch_size = int(num_records / num_batches)
+
     if batch_size <= 0:
         batch_size = 100
     elif batch_size > num_records:
         batch_size = num_records
+
     return batch_size
 
 @jit(nopython=True)
