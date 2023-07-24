@@ -109,6 +109,18 @@ def main():
         print(f'folder {outdir} already exists, please choose new directory or use --force')
         sys.exit()
 
+    if os.path.isdir(outdir):
+        files = [os.path.join(outdir,allele_map.json),
+                 os.path.join(outdir, f'query_profile.{file_type}'),
+                 os.path.join(outdir, f'ref_profile.{file_type}'),
+                 os.path.join(outdir,f'dists.parquet'),
+                 os.path.join(outdir, f'results.{file_type}'),
+                 os.path.join(outdir, 'run.json'),]
+        for file in files:
+            if os.path.isfile(file):
+                os.remove(file)
+
+
     if outfmt != 'matrix' and outfmt != 'pairwise':
         print(f'Supplied format does not match [matrix,pairwise]: {outfmt} ')
         sys.exit()
