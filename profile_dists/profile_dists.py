@@ -110,6 +110,7 @@ def main():
         sys.exit()
 
     if os.path.isdir(outdir):
+        print(f'folder {outdir} already exists, and force specified, cleaning up directory')
         files = [os.path.join(outdir,allele_map.json),
                  os.path.join(outdir, f'query_profile.{file_type}'),
                  os.path.join(outdir, f'ref_profile.{file_type}'),
