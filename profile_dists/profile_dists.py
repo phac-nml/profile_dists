@@ -143,6 +143,7 @@ def main():
         os.makedirs(outdir, 0o755)
 
     print(f'Reading query profile: {query_profile}')
+    sys.stdout.flush()
     (allele_map, qdf) = process_profile(query_profile,column_mapping=allele_map)
 
 
@@ -155,6 +156,7 @@ def main():
         (allele_map, rdf) = process_profile(ref_profile, column_mapping=allele_map)
 
     print(f'Writting allele map')
+    sys.stdout.flush()
     with open(os.path.join(outdir,"allele_map.json"),'w' ) as fh:
         fh.write(json.dumps(allele_map, indent=4))
 
@@ -201,7 +203,7 @@ def main():
         if len(cols_to_remove) > 0:
             qdf = filter_columns(qdf, cols_to_remove)
             rdf = filter_columns(rdf, cols_to_remove)
-
+    sys.stdout.flush()
     #convert profiles for fast dist calculations
     qlabels,qprofiles = convert_profiles(qdf)
     rlabels,rprofiles = convert_profiles(rdf)
@@ -233,7 +235,7 @@ def main():
         print(f'Postfilter Query size {len(qdf)}')
         rdf = rdf.drop(list(query_samples_to_remove))
 
-
+    sys.stdout.flush()
 
     # write updated profiles
     print(f'Writting updated profiles to disk')
@@ -241,6 +243,7 @@ def main():
     run_data['query_profile_info']['parsed_file_path'] = os.path.join(outdir, f'query_profile.{file_type}')
     write_profiles(rdf, os.path.join(outdir, f'ref_profile.{file_type}'), file_type)
     run_data['ref_profile_info']['parsed_file_path'] = os.path.join(outdir, f'ref_profile.{file_type}')
+    sys.stdout.flush()
 
     #Data frames no longer needed
     del(qdf)
@@ -258,7 +261,7 @@ def main():
     if batch_size is None:
         batch_size = calc_batch_size(num_records,num_columns,byte_value_size,max_mem)
     print(f'Using a batch size of {batch_size}')
-
+    sys.stdout.flush()
 
     #compute distances
     dist_matrix_file = os.path.join(outdir,f'dists.parquet')
@@ -277,6 +280,7 @@ def main():
         else:
             calc_distances_hamming(qprofiles, qlabels, rprofiles, rlabels, dist_matrix_file,batch_size)
 
+    sys.stdout.flush()
 
     #format output for output format
     results_file = os.path.join(outdir,"results.{}".format(file_type))
@@ -287,12 +291,15 @@ def main():
 
     run_data['analysis_end_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
+    sys.stdout.flush()
 
     with open(os.path.join(outdir,"run.json"),'w' ) as fh:
         fh.write(json.dumps(run_data, indent=4))
 
-    os.remove(dist_matrix_file)
+    if os.path.isfile(dist_matrix_file):
+        os.remove(dist_matrix_file)
 
+    sys.stdout.flush()
 
 # call main function
 if __name__ == '__main__':
