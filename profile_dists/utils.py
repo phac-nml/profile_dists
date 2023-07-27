@@ -7,6 +7,8 @@ from numba import jit
 from numba.typed import List
 import pyarrow.parquet as pq
 import re
+import sys
+import gc
 from profile_dists.constants import MIN_FILE_SIZE, FILE_FORMATS, VALID_INT_TYPES
 
 
@@ -351,7 +353,7 @@ def calc_batch_size(num_records,num_columns,byte_value_size,max_mem=None):
         avail = max_mem
     p = (byte_value_size * num_columns) + 56
     profile_mem = p * num_records * 4
-    dist_mem = ((byte_value_size * num_records) + 56) * num_records
+    dist_mem = ((byte_value_size * num_records) + 56) ** 2
     estimated_mem_needed = profile_mem + dist_mem
     if estimated_mem_needed < avail:
         return num_records
@@ -465,18 +467,27 @@ def calc_distances_scaled(query_profiles,query_labels,ref_profiles,ref_labels,pa
         count += 1
 
         if count == batch_size:
+            sys.stderr.write(f"{i} batch\n")
             df = pd.DataFrame(dists, columns=columns)
             if not os.path.isfile(parquet_file):
+                sys.stderr.write(f"write\n")
                 fp.write(parquet_file, df, compression='GZIP')
             else:
+                sys.stderr.write(f"append\n")
                 fp.write(parquet_file, df, append=True, compression='GZIP')
+            del(df)
             dists = []
             count = 0
+            gc.collect()
 
+
+    sys.stderr.write(f"made it\n")
     df = pd.DataFrame(dists, columns=columns)
     if not os.path.isfile(parquet_file):
+        sys.stderr.write(f"write\n")
         fp.write(parquet_file, df, compression='GZIP')
     else:
+        sys.stderr.write(f"append\n")
         fp.write(parquet_file, df, append=True, compression='GZIP')
 
 def calc_distances_scaled_missing(query_profiles,query_labels,ref_profiles,ref_labels,parquet_file,batch_size=1):
