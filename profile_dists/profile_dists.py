@@ -319,6 +319,10 @@ def main():
         for file in dist_files:
             writer.write_table(pq.read_table(file))
 
+    #Delete interim parquet files
+    for file in dist_files:
+        os.remove(file)
+
 
 
     #format output for output format
