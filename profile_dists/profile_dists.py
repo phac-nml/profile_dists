@@ -303,7 +303,8 @@ def main():
             else:
                 results.append(pool.apply_async(calc_distances_hamming, (
                     qprofile_chunk, qlabel_chunk, rprofiles, rlabels, dist_matrix_file, batch_size)))
-
+    pool.close()
+    pool.join()
     sys.stdout.flush()
 
     #Get results
