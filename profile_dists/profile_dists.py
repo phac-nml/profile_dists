@@ -66,7 +66,7 @@ def parse_args():
                         action='store_true')
     parser.add_argument('-n', '--count_missing', required=False, help='Count missing as differences',
                         action='store_true')
-    parser.add_argument('-c', '--cpus', required=False, type=int, help='Count missing as differences',default=1)
+    parser.add_argument('-p', '--cpus', required=False, type=int, help='Count missing as differences',default=1)
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
 
     return parser.parse_args()
