@@ -3,13 +3,14 @@ import sys
 from argparse import (ArgumentParser, ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter)
 import json
 import os
+from multiprocessing import Pool, cpu_count
 from datetime import datetime
 from profile_dists.version import __version__
 from profile_dists.utils import process_profile, is_file_ok, filter_columns, \
     count_missing_data, write_profiles, convert_profiles, calc_distances_scaled, calc_distances_hamming, \
     calc_distances_scaled_missing, calc_distances_hamming_missing,\
     write_dist_results, calc_batch_size, get_missing_loci_counts, flag_samples, filter_samples
-
+import pyarrow.parquet as pq
 from profile_dists.constants import RUN_DATA
 
 def parse_args():
@@ -65,6 +66,7 @@ def parse_args():
                         action='store_true')
     parser.add_argument('-n', '--count_missing', required=False, help='Count missing as differences',
                         action='store_true')
+    parser.add_argument('-c', '--cpus', required=False, type=int, help='Count missing as differences',default=1)
     parser.add_argument('-V', '--version', action='version', version="%(prog)s " + __version__)
 
     return parser.parse_args()
@@ -87,6 +89,12 @@ def main():
     count_missing_sites = cmd_args.count_missing
     max_mem = cmd_args.max_mem
     batch_size = cmd_args.batch_size
+    num_cpus = cmd_args.cpus
+
+    try:
+        num_cpus = len(os.sched_getaffinity(0))
+    except AttributeError:
+        num_cpus = cpu_count()
 
     run_data = RUN_DATA
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
@@ -256,6 +264,8 @@ def main():
         sys.exit()
 
 
+    count_queries = len(qlabels)
+
     num_columns = len(qprofiles[0])
     byte_value_size = 8  #8 bytes for float64 which is the worst case
     if batch_size is None:
@@ -263,24 +273,52 @@ def main():
     print(f'Using a batch size of {batch_size}')
     sys.stdout.flush()
 
-    #compute distances
-    dist_matrix_file = os.path.join(outdir,f'dists.parquet')
-    if os.path.isfile(dist_matrix_file):
-        os.remove(dist_matrix_file)
+    pool = Pool(processes=num_cpus)
+    q = copy.deepcopy(qlabels)
+    tracker = 0
+    results = []
 
+    # compute distances
     print(f'Calculating distances')
-    if count_missing_sites:
-        if dist_method == 'scaled':
-            calc_distances_scaled_missing(qprofiles,qlabels,rprofiles,rlabels,dist_matrix_file,batch_size)
+    dist_files = []
+    while q:
+        qlabel_chunk, q = q[:batch_size], q[batch_size:]
+        qprofile_chunk, qprofiles = qprofiles[:batch_size], qprofiles[batch_size:]
+        dist_matrix_file = os.path.join(outdir,"dists.{}.parquet".format(tracker))
+        if os.path.isfile(dist_matrix_file):
+            os.remove(dist_matrix_file)
+        tracker+=1
+        dist_files.append(dist_matrix_file)
+        if count_missing_sites:
+            if dist_method == 'scaled':
+                results.append(pool.apply_async(calc_distances_scaled_missing, (
+                qprofile_chunk, qlabel_chunk, rprofiles, rlabels, dist_matrix_file, batch_size)))
+            else:
+                results.append(pool.apply_async(calc_distances_hamming_missing, (
+                qprofile_chunk, qlabel_chunk, rprofiles, rlabels, dist_matrix_file, batch_size)))
         else:
-            calc_distances_hamming_missing(qprofiles, qlabels, rprofiles, rlabels, dist_matrix_file,batch_size)
-    else:
-        if dist_method == 'scaled':
-            calc_distances_scaled(qprofiles,qlabels,rprofiles,rlabels,dist_matrix_file,batch_size)
-        else:
-            calc_distances_hamming(qprofiles, qlabels, rprofiles, rlabels, dist_matrix_file,batch_size)
+            if dist_method == 'scaled':
+                results.append(pool.apply_async(calc_distances_scaled, (
+                    qprofile_chunk, qlabel_chunk, rprofiles, rlabels, dist_matrix_file, batch_size)))
+            else:
+                results.append(pool.apply_async(calc_distances_hamming, (
+                    qprofile_chunk, qlabel_chunk, rprofiles, rlabels, dist_matrix_file, batch_size)))
 
     sys.stdout.flush()
+
+    #Get results
+    r = []
+    for x in results:
+        r.append(x.get())
+
+    dist_matrix_file = os.path.join(outdir, "dists.parquet")
+
+    #Merge files into single distance matrix
+    with pq.ParquetWriter(dist_matrix_file, schema=pq.ParquetFile(dist_files[0]).schema_arrow) as writer:
+        for file in dist_files:
+            writer.write_table(pq.read_table(file))
+
+
 
     #format output for output format
     results_file = os.path.join(outdir,"results.{}".format(file_type))
