@@ -91,10 +91,14 @@ def main():
     batch_size = cmd_args.batch_size
     num_cpus = cmd_args.cpus
 
+
     try:
-        num_cpus = len(os.sched_getaffinity(0))
+        sys_num_cpus = len(os.sched_getaffinity(0))
     except AttributeError:
-        num_cpus = cpu_count()
+        sys_num_cpus = cpu_count()
+
+    if num_cpus > sys_num_cpus:
+        num_cpus = sys_num_cpus
 
     run_data = RUN_DATA
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
