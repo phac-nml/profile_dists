@@ -61,7 +61,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'profile_dists=profile_dists.profile_dists:main',
+            'profile_dists=profile_dists.main:main',
         ],
     },
 )
