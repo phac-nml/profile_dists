@@ -403,7 +403,6 @@ def compare_headers(file1,file2):
             return True
     return False
 
-@jit(nopython=True)
 def guess_profile_format(f):
     '''
     Helper function to determine what file type a file is
@@ -480,14 +479,10 @@ def calc_distances_scaled(query_profiles,query_labels,ref_profiles,ref_labels,pa
             count = 0
             gc.collect()
 
-
-    sys.stderr.write(f"made it\n")
     df = pd.DataFrame(dists, columns=columns)
     if not os.path.isfile(parquet_file):
-        sys.stderr.write(f"write\n")
         fp.write(parquet_file, df, compression='GZIP')
     else:
-        sys.stderr.write(f"append\n")
         fp.write(parquet_file, df, append=True, compression='GZIP')
 
 def calc_distances_scaled_missing(query_profiles,query_labels,ref_profiles,ref_labels,parquet_file,batch_size=1):
