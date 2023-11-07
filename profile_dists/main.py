@@ -55,14 +55,9 @@ def parse_args():
                         help='Maximum percentage of missing data allowed per locus (0 - 1)',default=1.0)
     parser.add_argument('--sample_qual_thresh', '-c', type=float, required=False,
                         help='Maximum percentage of missing data allowed per sample (0 - 1)',default=1.0)
-    parser.add_argument('--match_threshold', '-a', type=str, required=False,
+    parser.add_argument('--match_threshold', '-a', type=float, required=False,
                         help='Either a integer or float depending on what distance method is used (only used with pairwise format',default=-1)
-    parser.add_argument('--mapping_file', '-m', type=str, required=False,
-                        help='json formatted allele mapping')
-    parser.add_argument('--batch_size',  type=int, required=False,
-                        help='Manual selection of how many records should be included in a batch, default=auto')
-    parser.add_argument('--max_mem',  type=int, required=False,
-                        help='Maximum amount of memory to use',default=None)
+
     parser.add_argument('--force','-f', required=False, help='Overwrite existing directory',
                         action='store_true')
     parser.add_argument('-s', '--skip', required=False, help='Skip QA/QC steps',
