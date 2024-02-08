@@ -205,7 +205,8 @@ def process_profile(profile_path,format="text",column_mapping={}):
     #If all columns are already integers then skip the extra processing steps
     if is_correct_format:
         return (column_mapping, df)
-
+    
+    df = df.fillna('0')
     df = df.replace('?', '0', regex=False)
     df = df.replace(' ', '0', regex=False)
     df = df.replace('-', '0', regex=False)
