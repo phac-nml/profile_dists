@@ -205,7 +205,7 @@ def process_profile(profile_path,format="text",column_mapping={}):
     #If all columns are already integers then skip the extra processing steps
     if is_correct_format:
         return (column_mapping, df)
-    
+
     df = df.fillna('0')
     df = df.replace('?', '0', regex=False)
     df = df.replace(' ', '0', regex=False)
@@ -459,10 +459,7 @@ def calc_distances_scaled(query_profiles,query_labels,ref_profiles,ref_labels,pa
     for i in range(0, num_query_profiles):
         d = [ query_labels[i] ]
         for k in range(0, num_ref_profiles):
-            if i != k:
                 d.append(get_distance_scaled(query_profiles[i], ref_profiles[k]))
-            else:
-                d.append(0)
         dists.append(d)
         count += 1
 
@@ -511,10 +508,8 @@ def calc_distances_scaled_missing(query_profiles,query_labels,ref_profiles,ref_l
     for i in range(0, num_query_profiles):
         d = [ query_labels[i] ]
         for k in range(0, num_ref_profiles):
-            if i != k:
-                d.append(get_distance_scaled_missing(query_profiles[i], ref_profiles[k]))
-            else:
-                d.append(0)
+            d.append(get_distance_scaled_missing(query_profiles[i], ref_profiles[k]))
+
         dists.append(d)
         count += 1
 
@@ -535,7 +530,7 @@ def calc_distances_scaled_missing(query_profiles,query_labels,ref_profiles,ref_l
 
 def calc_distances_hamming(query_profiles,query_labels,ref_profiles,ref_labels,parquet_file,batch_size=1):
     '''
-    Calculates pairwise hamming distances between ref and query with  with missing data ignored
+    Calculates pairwise hamming distances between ref and query with missing data ignored
     :param query_profiles: list of integer numpy profiles
     :param query_labels:  list of data labels for query
     :param ref_profiles: list of integer numpy profiles
@@ -557,10 +552,8 @@ def calc_distances_hamming(query_profiles,query_labels,ref_profiles,ref_labels,p
     for i in range(0, num_query_profiles):
         d = [ query_labels[i] ]
         for k in range(0, num_ref_profiles):
-            if i != k:
-                d.append(get_distance_raw(query_profiles[i], ref_profiles[k]))
-            else:
-                d.append(0)
+            d.append(get_distance_raw(query_profiles[i], ref_profiles[k]))
+
         dists.append(d)
         count += 1
 
@@ -604,10 +597,7 @@ def calc_distances_hamming_missing(query_profiles,query_labels,ref_profiles,ref_
     for i in range(0, num_query_profiles):
         d = [ query_labels[i] ]
         for k in range(0, num_ref_profiles):
-            if i != k:
-                d.append(get_distance_raw_missing(query_profiles[i], ref_profiles[k]))
-            else:
-                d.append(0)
+            d.append(get_distance_raw_missing(query_profiles[i], ref_profiles[k]))
         dists.append(d)
         count += 1
 

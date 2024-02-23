@@ -55,9 +55,14 @@ def parse_args():
                         help='Maximum percentage of missing data allowed per locus (0 - 1)',default=1.0)
     parser.add_argument('--sample_qual_thresh', '-c', type=float, required=False,
                         help='Maximum percentage of missing data allowed per sample (0 - 1)',default=1.0)
-    parser.add_argument('--match_threshold', '-a', type=float, required=False,
+    parser.add_argument('--match_threshold', '-a', type=str, required=False,
                         help='Either a integer or float depending on what distance method is used (only used with pairwise format',default=-1)
-
+    parser.add_argument('--mapping_file', '-m', type=str, required=False,
+                        help='json formatted allele mapping')
+    parser.add_argument('--batch_size',  type=int, required=False,
+                        help='Manual selection of how many records should be included in a batch, default=auto')
+    parser.add_argument('--max_mem',  type=int, required=False,
+                        help='Maximum amount of memory to use',default=None)
     parser.add_argument('--force','-f', required=False, help='Overwrite existing directory',
                         action='store_true')
     parser.add_argument('-s', '--skip', required=False, help='Skip QA/QC steps',
@@ -91,6 +96,7 @@ def main():
     batch_size = cmd_args.batch_size
     num_cpus = cmd_args.cpus
     columns = cmd_args.columns
+
 
 
     try:
@@ -237,6 +243,11 @@ def main():
     #convert profiles for fast dist calculations
     qlabels,qprofiles = convert_profiles(qdf)
     rlabels,rprofiles = convert_profiles(rdf)
+
+    samples = set(qlabels) | set(rlabels)
+    num_samples = len(samples)
+    if num_samples < 100:
+        batch_size = num_samples
 
     run_data['query_profile_info']['num_samples'] = len(qlabels)
     run_data['query_profile_info']['num_samples_pass'] = run_data['query_profile_info']['num_samples']
