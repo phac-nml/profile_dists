@@ -5,6 +5,7 @@
 
 
 ## Profile Dists
+![alt text](https://github.com/phac-nml/profile_dists/blob/main/logo.png?raw=true)
 
 ## Contents
 
