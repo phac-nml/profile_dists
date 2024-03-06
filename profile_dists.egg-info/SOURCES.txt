@@ -1,0 +1,17 @@
+LICENSE
+MANIFEST.in
+README.md
+setup.py
+profile_dists/__init__.py
+profile_dists/constants.py
+profile_dists/main.py
+profile_dists/utils.py
+profile_dists/version.py
+profile_dists.egg-info/PKG-INFO
+profile_dists.egg-info/SOURCES.txt
+profile_dists.egg-info/dependency_links.txt
+profile_dists.egg-info/entry_points.txt
+profile_dists.egg-info/requires.txt
+profile_dists.egg-info/top_level.txt
+profile_dists/test_data/__init__.py
+tests/test_utils.py
