@@ -305,6 +305,7 @@ def test_filter_dists(labels, distances, threshold, expected, equivalent):
         assert utils.filter_dists(labels, distances, threshold) != expected
 
 
+
 def test_fromat_pairwise_dist():
     """
     TODO requires test data provided
@@ -349,3 +350,15 @@ def test_flag_samples(missing_counts, threshold, expected):
     """
     """
     assert utils.flag_samples(missing_counts, threshold) == expected
+
+
+@pytest.mark.parametrize("labels,profiles,labels_remove,expected_labels,expected_profiles", [
+    (["1", "2", "3"], [np.array([1, 2, 3]), np.array([1, 2, 3]), np.array([1, 2, 3])], ["1", "2", "3"], [], []),
+    (["1", "2", "3"], [np.array([1, 2, 3]), np.array([4, 5, 6]), np.array([7, 8, 9])], ["1"], ["2", "3"], [np.array([4, 5, 6]), np.array([7, 8, 9])]),
+])
+def test_filter_samples(labels, profiles, labels_remove, expected_labels, expected_profiles):
+    """
+    """
+    labels, profiles = utils.filter_samples(labels, profiles, labels_remove)
+    assert expected_labels == labels
+    assert expected_profiles == profiles
