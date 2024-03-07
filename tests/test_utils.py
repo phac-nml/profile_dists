@@ -1,3 +1,7 @@
+"""
+Enhancements:
+- Alot of string values are copied through out the utils code. Perhaps they can be added to the config as constants
+"""
 import pytest
 from profile_dists import utils
 import pandas as pd
@@ -100,6 +104,9 @@ def test_update_column_map():
 ])
 def test_is_all_columns_int(test_input, expected):
     """
+
+    enhancements:
+    - if VALID_INT_TYPES is not being updated, and only prescence or abscence in the set is being tested for the collection should be cast as a frozenset to prevent other updates and increse performance
     """
     assert utils.is_all_columns_int(pd.DataFrame(data=test_input).dtypes) == expected
 
@@ -202,6 +209,8 @@ def test_convert_profiles(test_input, expected):
 ])
 def test_get_dist_funcs(test_input, expected, func):
     """
+    Enhancements:
+    - You may be able to use some numpy built-ins to speed these functions up. e.g. numpy.hamming, or by applying a function to the array
     """
     assert expected == func(test_input[0], test_input[1]), f"Function tested: {func.__name__}"
 
@@ -213,6 +222,130 @@ def test_calc_batch_size():
 def test_validate_file():
     """
     Consideration:
-    - Is the numba compilation needed here?
+    - Is the numba compilation needed here? if so make sure make sure the function is only compiled once.
     """
     ...
+
+def test_compare_headers():
+    """
+    """
+    ...
+
+def test_guess_profile_format():
+    """
+    """
+    ...
+
+def test_get_file_length():
+    """
+    TODO requires setting up temp files
+    """
+    ...
+
+
+###############################################################
+"""
+Enhancements
+- Within the codebase these functions could likely all be converted into one, where the distance function is passed in
+"""
+def test_calc_distances_scaled():
+    """
+    TODO requires usage of test data
+    """
+    ...
+
+def test_calc_distances_scaled_missing():
+    """
+    TODO requires usage of test data
+    """
+    ...
+
+
+def test_calc_distances_hamming():
+    """
+    TODO requires usage of test data
+    """
+    ...
+
+def test_calc_distances_hamming_missing():
+    """
+    TODO requires usage of test data
+    """
+    ...
+########################################################
+
+def test_if_file_ok():
+    """
+    TODO requries test data
+    """
+    ...
+
+
+@pytest.mark.parametrize("labels,distances,threshold,expected,equivalent", [
+    (["1", "2", "3"], [1, 2, 3], 1, {"1": 1}, True),
+    (["1", "2", "3"], [1, 2, 3], 1, {"1": 1, "2": 2, "3": 3}, False),
+    (["1", "2", "3"], [4, 5, 6], 1, {}, True),
+    (["1", "2", "3"], [1, 2, 3], 0, {"1": 1, "2": 2, "3": 3}, False),
+    (["1", "2", "3"], [1, 2, 3], 1.1, {"1": 1}, True),
+
+])
+def test_filter_dists(labels, distances, threshold, expected, equivalent):
+    """
+    Note:
+    - Some tests here may be unfair and can be removed if they are handled else where in the code. e.g. those using numpy types
+    
+    Some tests were removed:
+    (["1", "2", "3"], [1.1, 2, 3], np.int64(100), {"1": 1.1, "2": 2, "3": 3}, True),
+    (["1", "2", "3"], [1.1, 2, 3], np.float64(100), {"1": 1.1, "2": 2, "3": 3}, True),
+    
+    """
+    if equivalent:
+        assert utils.filter_dists(labels, distances, threshold) == expected
+    else:
+        assert utils.filter_dists(labels, distances, threshold) != expected
+
+
+def test_fromat_pairwise_dist():
+    """
+    TODO requires test data provided
+    """
+    ...
+
+def test_write_dist_results():
+    """
+    TODO requires input data
+    """
+    ...
+
+
+@pytest.mark.parametrize("profiles,labels,count_loci,expected", [
+    ([np.array([1, 2, 3]), np.array([4, 5, 6]), np.array([7, 8, 9])], ["1", "2", "3"], 3, {"1":  0.00, "2": 0.00, "3": 0.00}),
+    ([np.array([0, 2, 3]), np.array([0, 5, 6]), np.array([0, 8, 9])], ["1", "2", "3"], 3, {"1":  0.33, "2": 0.33, "3": 0.33}),
+    ([np.array([0, 2, 3]), np.array([0, 5, 6]), np.array([0, 8, 9])], ["1", "2", "3"], 3, {"1":  33.33, "2": 33.33, "3": 33.33}),
+    ([np.array([1, 2, 3]), np.array([4, 5, 6]), np.array([7, 8, 9])], ["1", "2", "3"], 4, {"1":  0.00, "2": 0.00, "3": 0.00}),
+    ([np.array([0, 2, 3]), np.array([0, 5, 6]), np.array([0, 8, 9])], ["1", "2", "3"], 4, {"1":  75.00, "2": 75.00, "3": 75.00}),
+    ([np.array([0, 2, 3]), np.array([0, 5, 6]), np.array([0, 8, 9])], ["1", "2", "3"], 4, {"1":  0.33, "2": 0.33, "3": 0.33}),
+])
+def test_get_missing_loci_counts(profiles,labels,count_loci,expected):
+    """
+    Enhancements:
+    - Do the labels need to be passed here? or can the length of the input keys just be used?
+
+    Note:
+    - the docs say this function should return a % missing value, but it appears only the decimal value is returned
+    - Is count_loci controlled to be the same for every value?
+    """
+    output = utils.get_missing_loci_counts(profiles, labels, count_loci)
+    for k in labels:
+        assert pytest.approx(output[k], 0.1) == expected[k]
+
+
+@pytest.mark.parametrize("missing_counts,threshold,expected", [
+    ({"1": 100.0, "2": 50.00, "3": 0.00}, 20.00, ["1", "2"]),
+    ({"1": 100.0, "2": 50.00, "3": 0.00}, 100.00, []),
+    ({"1": 40, "2": 0, "3": 1}, 20.00, ["1"]),
+])
+def test_flag_samples(missing_counts, threshold, expected):
+    """
+    """
+    assert utils.flag_samples(missing_counts, threshold) == expected
