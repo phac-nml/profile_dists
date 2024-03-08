@@ -131,14 +131,14 @@ def create_typed_dict(dict_):
         td[k] = v
     return td
 
-@pytest.mark.parametrize("test_input,threshold,expected,exception", [
+@pytest.mark.parametrize("test_input,threshold,expected", [
     ({'1': 1, '2': 2, '3': 0}, 1, ['2']),
     ({'1': 1, '2': 2, '3': 0}, 2, []),
     ({'1': 1, '2': 2, '3': 0}, 4, []),
     ({'1': 1, '2': 2, '3': 0}, 0.1, ['1', '2']),
     ({'1': 1, '2': 2, '3': 0.11}, 0.1, ['1', '2', '3']),
     ])
-def test_identify_cols_to_remove(test_input, threshold, expected, exception):
+def test_identify_cols_to_remove(test_input, threshold, expected):
     """
     Consideration:
     - should overflow exception be handled
