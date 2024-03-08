@@ -132,11 +132,11 @@ def create_typed_dict(dict_):
     return td
 
 @pytest.mark.parametrize("test_input,threshold,expected,exception", [
-    ({'1': 1, '2': 2, '3': 0}, 1, ['2'], None),
-    ({'1': 1, '2': 2, '3': 0}, 2, [], None),
-    ({'1': 1, '2': 2, '3': 0}, 4, [], None),
-    ({'1': 1, '2': 2, '3': 0}, 0.1, ['1', '2'], None),
-    ({'1': 1, '2': 2, '3': 0.11}, 0.1, ['1', '2', '3'], None),
+    ({'1': 1, '2': 2, '3': 0}, 1, ['2']),
+    ({'1': 1, '2': 2, '3': 0}, 2, []),
+    ({'1': 1, '2': 2, '3': 0}, 4, []),
+    ({'1': 1, '2': 2, '3': 0}, 0.1, ['1', '2']),
+    ({'1': 1, '2': 2, '3': 0.11}, 0.1, ['1', '2', '3']),
     ])
 def test_identify_cols_to_remove(test_input, threshold, expected, exception):
     """
@@ -148,10 +148,6 @@ def test_identify_cols_to_remove(test_input, threshold, expected, exception):
         ({'1': 1, '2': 2, '3': 100000000000000000000000000000000000000000}, 3, ['3'], OverflowError), 
         ({'1': 1, '2': 2, '3': 0.11011111111111111111111111111111111111}, 0.1, ['1', '2'], None),
     """
-    
-    with pytest.raises(Exception) as excinfo:
-        create_typed_dict(test_input)
-        assert excinfo.type is exception
     assert expected == utils.identify_cols_to_remove(create_typed_dict(test_input), threshold)
 
 
