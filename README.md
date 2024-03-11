@@ -4,21 +4,11 @@
 [![License: Apache-2.0](https://img.shields.io/github/license/phac-nml/profile_dists)](https://www.apache.org/licenses/LICENSE-2.0)
 
 
-## Profile Dists
+# Profile Dists
 ![alt text](https://github.com/phac-nml/profile_dists/blob/main/logo.png?raw=true)
 
-## Contents
 
-- [Introduction](#introduction)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Quick Start](#quick-start)
-- [FAQ](#faq)
-- [Citation](#citation)
-- [Legal](#legal)
-- [Contact](#contact)
-
-## Introduction
+# Introduction
 
 Surveillance and outbreak analysis of pathogens has been operationalized by multiple public health laboratories around 
 the world using gene-by-gene approaches. Gene by gene comparisons can be considered the next iteration of multi-locus seuence typing 
@@ -33,7 +23,7 @@ for a centralized allele nomenclature service. Additionally, GrapeTree does not 
 a database of samples. Furthermore, the memory requirements of GrapeTree grow significantly with the number of samples being compared
 as the distance matrix is held in memory. As datasets grow, using text based formats such as CSV, TSV represent significant amounts of runtime in terms
 of reading, parsing and writing.  New formats such as [parquet](https://parquet.apache.org/) support compression and are optimized for 
-efficiency of storage and retreiveal of data.
+efficiency of storage and retrieval of data.
 <br><br>
 To address needs of users within our team we have designed an integrated solution for calculating distance matricies and querying of genetically
 similar samples within a defined threshold to support outbreak and surveillance activities. We provide the flexibility to have standard text 
@@ -42,7 +32,15 @@ refinements may include the support for multiprocessing. To facilitate integrati
 as a nextflow workflow.
 
 
-## Installation
+## Citation
+
+Robertson, James, Wells, Matthew, Schonfeld, Justin, Reimer, Aleisha. Profile Dists: Convenient package for comparing genetic similarity of samples based on allelic profiles. 2023. https://github.com/phac-nml/profile_dists
+
+## Contact
+
+For any questions, issues or comments please make a Github issue or reach out too [**James Robertson**](james.robertson@phac-aspc.gc.ca).
+
+# Install
 
 Install the latest released version from conda:
 
@@ -56,18 +54,72 @@ Install the latest master branch version directly from Github:
 
         pip install git+https://github.com/phac-nml/profile_dists.git
 
+### Compatibility
 
+All required packages are listed in the setup.py. The package does require [Numba](https://numba.pydata.org/) to JIT compile certain functions, if any issues during installation are encountered please make an issue on the repository.
+
+# Getting Started
 
 ## Usage
-If you run ``profile_dists``, you should see the following usage statement:
 
-    usage: dist.py [-h] --query QUERY --ref REF --outdir OUTDIR [--outfmt OUTFMT]
-                   [--file_type FILE_TYPE] [--distm DISTM]
-                   [--missing_thresh MISSING_THRESH]
-                   [--sample_qual_thresh SAMPLE_QUAL_THRESH]
-                   [--match_threshold MATCH_THRESHOLD]
-                   [--mapping_file MAPPING_FILE] [--force] [-s] [-V]
+### Command Line Options
+If you run ``profile_dists --help``, you should see the following usage statement describing each parameter `profile_dists` accepts:
 
+        Profile Dists: Calculate genetic distances based on allele profiles v. 1.0.0
+
+        options:
+                -h, --help            show this help message and exit
+                --query QUERY, -q QUERY
+                                        Query allelic profiles (default: None)
+                --ref REF, -r REF     Reference allelic profiles (default: None)
+                --outdir OUTDIR, -o OUTDIR
+                                        Result output files (default: None)
+                --outfmt OUTFMT, -u OUTFMT
+                                        Out format [matrix, pairwise] (default: matrix)
+                --file_type FILE_TYPE, -e FILE_TYPE
+                                        Out format [text, parquet] (default: text)
+                --distm DISTM, -d DISTM
+                                        Distance method raw hamming or scaled difference [hamming, scaled] (default: scaled)
+                --missing_thresh MISSING_THRESH, -t MISSING_THRESH
+                                        Maximum percentage of missing data allowed per locus (0 - 1) (default: 1.0)
+                --sample_qual_thresh SAMPLE_QUAL_THRESH, -c SAMPLE_QUAL_THRESH
+                                        Maximum percentage of missing data allowed per sample (0 - 1) (default: 1.0)
+                --match_threshold MATCH_THRESHOLD, -a MATCH_THRESHOLD
+                                        Either a integer or float depending on what distance method is used (only used with pairwise format (default: -1)
+                --mapping_file MAPPING_FILE, -m MAPPING_FILE
+                                        json formatted allele mapping (default: None)
+                --batch_size BATCH_SIZE
+                                        Manual selection of how many records should be included in a batch, default=auto (default: None)
+                --max_mem MAX_MEM     Maximum amount of memory to use (default: None)
+                --force, -f           Overwrite existing directory (default: False)
+                -s, --skip            Skip QA/QC steps (default: False)
+                --columns COLUMNS     Single column file with one column name per line or list of columns comma separate (default: None)
+                -n, --count_missing   Count missing as differences (default: False)
+                -p CPUS, --cpus CPUS  Count missing as differences (default: 1)
+                -V, --version         show program's version number and exit 
+
+### Quick start
+
+#### **Distance matrix calculation**
+
+The default behaviour of profile dists is to construct a pairwise distance matrix with the columns representing the
+reference sequences and rows representing the query sequences. For clustering analysis, you can construct a symmertic/square
+distance matrix by supplying the same profile as reference and query.
+
+```
+profile_dists --query samples.profile --ref samples.profile --outdir results
+```
+
+#### Fast Matching
+
+Profile dists also suports querying of a set of sample profiles against a reference database and reporting that as either a
+matrix or three column table of [ query_id, reference_id, dist ]
+
+```
+profile_dists --query queries.profile --ref reference.profile --outdir results --match_threshold 10
+```
+
+## Data Input/Formats
 Supported profile formats
 =====
 **Native**
@@ -110,7 +162,9 @@ Supported profile formats
 
 - Direct support for missing data in the form of ?, 0, - or space
 
-Output Profile
+## Output/Results
+
+### Output Profile
 =====
 **Native**
 
@@ -125,27 +179,7 @@ Output Profile
 
 - All columns are converted to contain only integers with missing data represented as a 0
 
-
-Quick start
-=====
-**Distance matrix calculation**
-
-The default behaviour of profile dists is to construct a pairwise distance matrix with the columns representing the
-reference sequences and rows representing the query sequences. For clustering analysis, you can construct a symmertic/square
-distance matrix by supplying the same profile as reference and query.
-
-<br />
-
-        profile_dists --query samples.profile --ref samples.profile --outdir results
-
-Profile dists also suports querying of a set of sample profiles against a reference database and reporting that as either a
-matrix or three column table of [ query_id, reference_id, dist ]
-
-<br />
-
-        profile_dists --query queries.profile --ref reference.profile --outdir results --match_threshold 10
-
-**Outputs:**
+### Output Directory Structure
 
 ```
 {Output folder name}
@@ -155,17 +189,11 @@ matrix or three column table of [ query_id, reference_id, dist ]
 ├── results.{text|parquet} - Either symmetric distance matrix or three column file of [query_id, ref_if, distance]
 └── run.json - Contains logging information for the run including parameters and quality information
 ```
-## Benchmarks
 
-Coming soon
+## Troubleshooting and FAQs:
 
-## FAQ
+No issues are currently reported.
 
-Coming soon
-
-## Citation
-
-Robertson, James, Wells, Matthew, Schonfeld, Justin, Reimer, Aleisha. Profile Dists: Convenient package for comparing genetic similarity of samples based on allelic profiles. 2023. https://github.com/phac-nml/profile_dists
 
 ## Legal
 
@@ -185,6 +213,6 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 
 
-## Contact
+# Updates and Release Notes:
 
-**James Robertson**: james.robertson@phac-aspc.gc.ca
+v1.0.0 
