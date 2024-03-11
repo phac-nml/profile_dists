@@ -12,6 +12,7 @@ from numba.typed import Dict
 
 @pytest.mark.parametrize("test_input,expected", [
     (["f5g1", "gg21", "hhhh"], 'hash'),
+    (["1234", "1234", "3333"], 'int'),
     (["f5", "gg21", "123"], 'mix'),
     (["14", "1000", "12"], 'int'),
     ([14, 1000, 12], 'int'),
@@ -29,6 +30,7 @@ def test_guess_format(test_input, expected):
     - No base case is handled, function ends with elif statement, the returned value will 
     then be a '' string, which may not be a handled case
     - Are floating point values prevented from entering the function?
+    - Hashes are still ints depending on the base, e.g. 10, 16 or 64 used to encode the hash
     """
     assert expected == utils.guess_format(test_input)
 
