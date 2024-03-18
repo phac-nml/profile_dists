@@ -38,7 +38,7 @@ Robertson, James, Wells, Matthew, Schonfeld, Justin, Reimer, Aleisha. Profile Di
 
 ## Contact
 
-For any questions, issues or comments please make a Github issue or reach out too [**James Robertson**](james.robertson@phac-aspc.gc.ca).
+For any questions, issues or comments please make a Github issue or reach out to [**James Robertson**](james.robertson@phac-aspc.gc.ca).
 
 # Install
 
