@@ -30,7 +30,7 @@ setup(
     name='profile_dists',
     include_package_data=True,
     version=__version__,
-    python_requires='>=3.8.2,<4',
+    python_requires='>=3.8.2,<3.12',
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
     packages=find_packages(exclude=['tests']),
