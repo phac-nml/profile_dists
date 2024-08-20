@@ -77,25 +77,24 @@ def parse_args():
     return parser.parse_args()
 
 
-def main():
-    cmd_args = parse_args()
-    query_profile = cmd_args.query
-    ref_profile = cmd_args.ref
-    outdir = cmd_args.outdir
-    outfmt = cmd_args.outfmt
-    file_type = cmd_args.file_type
-    dist_method = cmd_args.distm
-    missing_threshold = cmd_args.missing_thresh
-    allele_mapping_file = cmd_args.mapping_file
-    force = cmd_args.force
-    match_threshold = cmd_args.match_threshold
-    sample_qual_thresh = cmd_args.sample_qual_thresh
-    skip = cmd_args.skip
-    count_missing_sites = cmd_args.count_missing
-    max_mem = cmd_args.max_mem
-    batch_size = cmd_args.batch_size
-    num_cpus = cmd_args.cpus
-    columns = cmd_args.columns
+def run_profile_dists(params):
+    query_profile = params['query']
+    ref_profile = params['ref']
+    outdir = params['outdir']
+    outfmt = params['outfmt']
+    file_type = params['file_type']
+    dist_method = params['distm']
+    missing_threshold = params['missing_thresh']
+    allele_mapping_file = params['mapping_file']
+    force = params['force']
+    match_threshold = params['match_threshold']
+    sample_qual_thresh = params['sample_qual_thresh']
+    skip = params['skip']
+    count_missing_sites = params['count_missing']
+    max_mem = params['max_mem']
+    batch_size = params['batch_size']
+    num_cpus = params['cpus']
+    columns = params['columns']
 
 
 
@@ -109,7 +108,7 @@ def main():
 
     run_data = RUN_DATA
     run_data['analysis_start_time'] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    run_data['parameters'] = vars(cmd_args)
+    run_data['parameters'] = params
 
     input_files = [query_profile,ref_profile,allele_mapping_file]
     for f in input_files:
@@ -203,7 +202,6 @@ def main():
             sys.exit()
         qcols_to_remove = set(qdf.columns.values.tolist()) - set(columns)
         rcols_to_remove = set(rdf.columns.values.tolist()) - set(columns)
-
 
 
     # remove columns
@@ -376,6 +374,12 @@ def main():
         os.remove(dist_matrix_file)
 
     sys.stdout.flush()
+    pass
+
+
+def main():
+    cmd_args = parse_args()
+    run_profile_dists(vars(cmd_args))
 
 # call main function
 if __name__ == '__main__':
