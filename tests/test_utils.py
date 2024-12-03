@@ -21,6 +21,7 @@ from numba.typed import Dict
     (["0.00", "1.0", "3.0"], 'mix'),
     (["0.3", 1.0, "4.2"], 'mix'),
     ([0.00, 1.0, 3.0], 'mix'),
+    ([0.00, 1.1, 3.0], 'mix'),
     ([0.00, 1, 3.0], 'mix'),
     (["0.00", "1", "3.0"], 'mix'),
 ])
@@ -30,7 +31,6 @@ def test_guess_format(test_input, expected):
     - No base case is handled, function ends with elif statement, the returned value will 
     then be a '' string, which may not be a handled case
     - Are floating point values prevented from entering the function?
-    - Hashes are still ints depending on the base, e.g. 10, 16 or 64 used to encode the hash
     """
     assert expected == utils.guess_format(test_input)
 
@@ -236,7 +236,7 @@ def test_guess_profile_format():
 
 def test_get_file_length():
     """
-    TODO requires setting up temp files
+    Requires setting up temp files
     """
     ...
 
@@ -335,8 +335,12 @@ def test_get_missing_loci_counts(profiles,labels,count_loci,expected):
     - Is count_loci controlled to be the same for every value?
     """
     output = utils.get_missing_loci_counts(profiles, labels, count_loci)
+
+    #! I am adding a multiplier of 100 to convert the output of the function into a percentage
+    #! as it seems like this conversion is being handled somewhere else in the program
+    percent_conversion = 100
     for k in labels:
-        assert pytest.approx(output[k], 0.1) == expected[k]
+        assert pytest.approx(output[k] * percent_conversion, 0.1) == expected[k]
 
 
 @pytest.mark.parametrize("missing_counts,threshold,expected", [
