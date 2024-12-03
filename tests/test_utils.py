@@ -85,12 +85,12 @@ def test_contains_alpha(test_input, expected):
 
 
 def test_convert_allele_codes():
-    """TODO need to review function call to clarify input before test is written
+    """Need to review function call to clarify input before test is written
     """
     ...
 
 def test_update_column_map():
-    """TODO requires col map
+    """Requires col map
     """
     ...
 
@@ -248,33 +248,33 @@ Enhancements
 """
 def test_calc_distances_scaled():
     """
-    TODO requires usage of test data
+    Requires usage of test data
     """
     ...
 
 def test_calc_distances_scaled_missing():
     """
-    TODO requires usage of test data
+    Requires usage of test data
     """
     ...
 
 
 def test_calc_distances_hamming():
     """
-    TODO requires usage of test data
+    Requires usage of test data
     """
     ...
 
 def test_calc_distances_hamming_missing():
     """
-    TODO requires usage of test data
+    Requires usage of test data
     """
     ...
 ########################################################
 
 def test_if_file_ok():
     """
-    TODO requries test data
+    Requires test data
     """
     ...
 
@@ -306,13 +306,13 @@ def test_filter_dists(labels, distances, threshold, expected, equivalent):
 
 def test_fromat_pairwise_dist():
     """
-    TODO requires test data provided
+    Requires test data provided
     """
     ...
 
 def test_write_dist_results():
     """
-    TODO requires input data
+    Requires input data
     """
     ...
 
