@@ -154,7 +154,7 @@ def test_identify_cols_to_remove(test_input, threshold, expected):
 
 
 def test_process_profile():
-    """TODO requires staging test data
+    """Requires staging test data
     """
     ...
 
@@ -166,7 +166,7 @@ def test_process_profile():
 ])
 def test_convert_profiles(test_input, expected):
     """
-    TODO input on this testcase is required to make it more exhaustive
+    Input on this testcase is required to make it more exhaustive
     """
     
     row_ids, profiles = utils.convert_profiles(pd.DataFrame(data=test_input))
