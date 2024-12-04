@@ -1,0 +1,38 @@
+{
+    "profile_dists": "version: 1.0.2",
+    "analysis_start_time": "04/12/2024 11:33:36",
+    "analysis_end_time": "04/12/2024 11:33:37",
+    "parameters": {
+        "query": "./data.tsv",
+        "ref": "./data.tsv",
+        "outdir": "./scaled_count_missing",
+        "outfmt": "matrix",
+        "file_type": "text",
+        "distm": "scaled",
+        "missing_thresh": 1.0,
+        "sample_qual_thresh": 1.0,
+        "match_threshold": -1,
+        "mapping_file": null,
+        "batch_size": null,
+        "max_mem": null,
+        "force": false,
+        "skip": false,
+        "columns": null,
+        "count_missing": true,
+        "cpus": 1
+    },
+    "query_profile_info": {
+        "num_samples": 5,
+        "num_samples_pass": 5,
+        "failed_samples": [],
+        "parsed_file_path": "./scaled_count_missing/query_profile.text"
+    },
+    "ref_profile_info": {
+        "num_samples": 5,
+        "num_samples_pass": 5,
+        "failed_samples": [],
+        "parsed_file_path": "./scaled_count_missing/ref_profile.text"
+    },
+    "loci_removed": [],
+    "result_file": "./scaled_count_missing/results.text"
+}
