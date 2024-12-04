@@ -2,4 +2,4 @@
 *.pyc
 build
 *.egg
-*egg-info
+*.egg-info
