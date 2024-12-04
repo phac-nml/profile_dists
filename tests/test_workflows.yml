@@ -1,0 +1,27 @@
+- name: Run help
+  command: profile_dists --help
+
+- name: Hamming Distance Count Missing
+  command: profile_dists -q tests/data/data.tsv -r tests/data/data.tsv -d hamming -n -o hamming_count_missing
+  files:
+  - path: hamming_count_missing/results.text
+    md5sum: ab0b4f36fcb14e1f50722c52fee9f327
+
+- name: Hamming Distance Do Not Count Missing as Alleles
+  command: profile_dists -q tests/data/data.tsv -r tests/data/data.tsv -d hamming -o hamming
+  files:
+  - path: hamming/results.text
+    md5sum: ab0b4f36fcb14e1f50722c52fee9f327
+
+- name: Scaled Distance Count Missing
+  command: profile_dists -q tests/data/data.tsv -r tests/data/data.tsv -d scaled -n -o scaled_count_missing
+  files:
+  - path: scaled_count_missing/results.text
+    md5sum: 26446fdca1cd321aba0db9e7e4e743e0
+
+- name: Scaled Distance Do Not Count Missing as Alleles
+  command: profile_dists -q tests/data/data.tsv -r tests/data/data.tsv -d scaled -o scaled
+  files:
+  - path: scaled/results.text
+    md5sum: 6eb56fbf3a925fa7b50f65b78febdad4
+
