@@ -25,3 +25,32 @@
   - path: scaled/results.text
     md5sum: 6eb56fbf3a925fa7b50f65b78febdad4
 
+- name: Hamming Distance and drop empty columns
+  command: profile_dists -q tests/data/data.tsv -r tests/data/data.tsv -d hamming -o hamming_count_missing --missing_thresh 0.0
+  files:
+  - path: hamming_count_missing/results.text
+    md5sum: ab0b4f36fcb14e1f50722c52fee9f327
+
+- name: Hamming Distance and drop row 0
+  command: profile_dists -q tests/data/data_empty_row.tsv -r tests/data/data_empty_row.tsv -d hamming -o hamming --sample_qual_thresh 0.70
+  files:
+  - path: hamming/results.text
+    md5sum: ab0b4f36fcb14e1f50722c52fee9f327
+
+- name: Hamming Distance and drop row question mark
+  command: profile_dists -q tests/data/data_empty_row_q.tsv -r tests/data/data_empty_row_q.tsv -d hamming -o hamming --sample_qual_thresh 0.70
+  files:
+  - path: hamming/results.text
+    md5sum: ab0b4f36fcb14e1f50722c52fee9f327
+
+- name: Hamming Distance and drop row underscore
+  command: profile_dists -q tests/data/data_empty_row_us.tsv -r tests/data/data_empty_row_us.tsv -d hamming -o hamming --sample_qual_thresh 0.70
+  files:
+  - path: hamming/results.text
+    md5sum: ab0b4f36fcb14e1f50722c52fee9f327
+  
+- name: Hamming Distance and drop space
+  command: profile_dists -q tests/data/data_empty_row_space.tsv -r tests/data/data_empty_row_space.tsv -d hamming -o hamming --sample_qual_thresh 0.70
+  files:
+  - path: hamming/results.text
+    md5sum: ab0b4f36fcb14e1f50722c52fee9f327
