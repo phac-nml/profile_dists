@@ -17,11 +17,11 @@ from numba.typed import Dict
     (["14", "1000", "12"], 'int'),
     ([14, 1000, 12], 'int'),
     ([""], ''),
+    ([14, 20, "AA"], 'hash'),
     #! These tests are commented out for the sake of having some 
     #! set of tests be present and readily testable but if 
     #! further development is to be performed on Profile Dists
     #! these tests should be addressed.
-    #! ([14, 20, "AA"], 'mix'),
     #! (["0.00", "1.0", "3.0"], 'mix'),
     #! (["0.3", 1.0, "4.2"], 'mix'),
     #! ([0.00, 1.0, 3.0], 'mix'),
