@@ -119,9 +119,11 @@ def update_column_map(c1,c2):
     :param c2: dict
     :return: dict
     '''
+    allele_id = max(list(c1.values()))+1
     for k in c2:
         if not k in c1:
-            c1[k] = c2[k]
+            c1[k] = allele_id
+            allele_id+=1
 
 def is_all_columns_int(column_dtypes):
     '''
@@ -187,6 +189,7 @@ def process_profile(profile_path,format="text",column_mapping={}):
     :param column_mapping: Previous allele code mapping to apply to the current file
     :return: (dict, pd)
     '''
+
     df = pd.DataFrame()
     if format=='text':
         df = pd.read_csv(profile_path,header=0,sep="\t",index_col=0,low_memory=False)
