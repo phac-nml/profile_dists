@@ -60,3 +60,5 @@
   files:
   - path: hamming_diff/results.text
     md5sum: 3acf1c928d63c1b3bdab3043f499a835 # tests/data/different_reference_query/expected-results.text
+  - path: hamming_diff/allele_map.json
+    md5sum: 65076b0e2282a84e114fba39feca787f # tests/data/different_reference_query/expected-allele_map.json
