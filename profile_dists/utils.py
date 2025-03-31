@@ -23,20 +23,20 @@ def guess_format(unique_values):
     has_integers = contains_integers(unique_values)
     has_alpha  = contains_alpha(unique_values)
 
-    format = ''
+    file_format = ''
     #columns contains hash codes
     if length_equal and has_integers and has_alpha:
-        format = 'hash'
+        file_format = 'hash'
 
     # columns contains a mix of integers and other info
     elif has_integers and has_alpha:
-        format = 'mix'
+        file_format = 'mix'
 
     #columns contain only integers
     elif has_integers:
-        format = 'int'
+        file_format = 'int'
 
-    return format
+    return file_format
 
 
 def is_all_same_len(unique_values):
@@ -119,9 +119,11 @@ def update_column_map(c1,c2):
     :param c2: dict
     :return: dict
     '''
+    allele_id = max(list(c1.values()))+1
     for k in c2:
         if not k in c1:
-            c1[k] = c2[k]
+            c1[k] = allele_id
+            allele_id+=1
 
 def is_all_columns_int(column_dtypes):
     '''
@@ -188,6 +190,7 @@ def process_profile(profile_path,format="text",column_mapping={}):
     :return: (dict, pd)
     '''
 
+    df = pd.DataFrame()
     if format=='text':
         df = pd.read_csv(profile_path,header=0,sep="\t",index_col=0,low_memory=False)
     elif format=='parquet':
@@ -628,7 +631,7 @@ def is_file_ok(f):
     status = True
     if not os.path.isfile(f):
         status = False
-    elif get_file_length(f) < 2:
+    elif get_file_length(f) < 1:
         status = False
     elif os.path.getsize(f) < MIN_FILE_SIZE:
         status = False

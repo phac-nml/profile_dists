@@ -6,9 +6,6 @@ on:
   push:
     branches: ["main", "tests", "dev"]
   pull_request:
-    branches: ["main", "tests", "dev"]
-
-
 
 jobs:
   build:
