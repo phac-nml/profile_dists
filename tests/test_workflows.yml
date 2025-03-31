@@ -54,3 +54,17 @@
   files:
   - path: hamming/results.text
     md5sum: ab0b4f36fcb14e1f50722c52fee9f327
+
+- name: Hamming distances and different samples in reference and query files
+  command: profile_dists -q tests/data/different_reference_query/query.profile.tsv -r tests/data/different_reference_query/ref.profile.tsv -d hamming -o hamming_diff
+  files:
+  - path: hamming_diff/results.text
+    contains:
+      - "dists\tSRR3736530\tSRR3736531"
+      - "SRR3736530\t0\t7"
+    md5sum: 3acf1c928d63c1b3bdab3043f499a835 # tests/data/different_reference_query/expected-results.text
+  - path: hamming_diff/allele_map.json
+    contains:
+      - '"ec5d7ff0545a93f0ef9e0a85044ccf1a": 1'
+      - '"49316320ea9c8e18a34ae4c197463819": 2'
+    md5sum: 65076b0e2282a84e114fba39feca787f # tests/data/different_reference_query/expected-allele_map.json
