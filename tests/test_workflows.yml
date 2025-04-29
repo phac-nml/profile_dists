@@ -84,7 +84,7 @@
   - path: dist8/results.text
     contains:
       - "query_id\tref_id\tdist"
-      - "sample3\tsample1\t8"
+      - "sample3\tsample1\t7"
     md5sum: 8baeddf1952545343fdf95daf658fb23 # tests/data/different_reference_query/results8.text
 
 - name: Hamming distances and different samples in full reference and query files (no missing alleles) sample1 as query and sample3 as reference
@@ -93,5 +93,5 @@
   - path: dist11/results.text
     contains:
       - "query_id\tref_id\tdist"
-      - "sample1\tsample3\t11"
+      - "sample1\tsample3\t7"
     md5sum: ad2bad2286c347068e77003800c1e670 # tests/data/different_reference_query/results11.text

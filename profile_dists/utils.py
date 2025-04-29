@@ -121,7 +121,9 @@ def update_column_map(c1,c2):
     '''
     allele_id = max(list(c1.values()))+1
     for k in c2:
-        if not k in c1:
+        if k == '0':
+            c1[k] = 0
+        elif not k in c1:
             c1[k] = allele_id
             allele_id+=1
 

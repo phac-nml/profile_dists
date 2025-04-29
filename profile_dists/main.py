@@ -274,7 +274,7 @@ def run_profile_dists(params):
         print(f"Reusing data from: {query_profile}")
         rdf = copy.deepcopy(qdf)
     else:
-        print(f"Reading reference profile: {query_profile}")
+        print(f"Reading reference profile: {ref_profile}")
         (allele_map, rdf) = process_profile(ref_profile, column_mapping=allele_map)
 
     print("Writting allele map")
