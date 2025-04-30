@@ -119,10 +119,12 @@ def update_column_map(c1,c2):
     :param c2: dict
     :return: dict
     '''
+    missing_alleles = '0'
+    missing_allele_distance = 0
     allele_id = max(list(c1.values()))+1
     for k in c2:
-        if k == '0':
-            c1[k] = 0
+        if k == missing_alleles: ## Introduced to solve Issue #25 where missing alleles were being treated as hashes, and distance assigned in alelle map
+            c1[k] = missing_allele_distance
         elif not k in c1:
             c1[k] = allele_id
             allele_id+=1
