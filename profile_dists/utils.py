@@ -84,7 +84,7 @@ def contains_alpha(unique_values):
             break
     return status
 
-def convert_allele_codes(unique_values,method):
+def convert_allele_codes(unique_values,method, MISSING_ALLELE='0', MISSING_ALLELE_DISTANCE=0):
     '''
     Accepts a list of values and either casts them to an integer for a valid allele or 0 for missing
     :param unique_values: list of numeric or string values
@@ -98,33 +98,31 @@ def convert_allele_codes(unique_values,method):
             if isinstance(value,int) or str(value).isnumeric():
                 converted_values[unique_values[idx]] = int(value)
             else:
-                converted_values[unique_values[idx]] = 0
+                converted_values[unique_values[idx]] = MISSING_ALLELE_DISTANCE
         elif method == 'hash':
-            if value == '0':
-                converted_values[unique_values[idx]] = 0
+            if value == MISSING_ALLELE:
+                converted_values[unique_values[idx]] = MISSING_ALLELE_DISTANCE
             else:
                 converted_values[unique_values[idx]] = counter
                 counter+=1
         else:
             if re.search('[a-zA-Z]+',str(value)) or re.search('[^0-9a-zA-Z]+',str(value)):
-                value = '0'
+                value = MISSING_ALLELE
             converted_values[unique_values[idx]] = int(value)
     return converted_values
 
 
-def update_column_map(c1,c2):
+def update_column_map(c1,c2, MISSING_ALLELE='0', MISSING_ALLELE_DISTANCE=0):
     '''
     Adds a reference of each column from c2 into c1
     :param c1: dict
     :param c2: dict
     :return: dict
     '''
-    missing_alleles = '0'
-    missing_allele_distance = 0
     allele_id = max(list(c1.values()))+1
     for k in c2:
-        if k == missing_alleles: ## Introduced to solve Issue #25 where missing alleles were being treated as hashes, and distance assigned in alelle map
-            c1[k] = missing_allele_distance
+        if k == MISSING_ALLELE:
+            c1[k] = MISSING_ALLELE_DISTANCE
         elif not k in c1:
             c1[k] = allele_id
             allele_id+=1
@@ -187,7 +185,8 @@ def filter_columns(df,columns_to_remove):
 def process_profile(profile_path,format="text",column_mapping={}):
     '''
     Reads in a file in (text, parquet) formats and applies processing to standardize the data and prepare it to be used
-    for distance calculations
+    for distance calculations.
+    If an allele is missing (NA, ' ', '-', '') then it is replaced with 0
     :param profile_path: path to file
     :param format: format of the file [text, parquet]
     :param column_mapping: Previous allele code mapping to apply to the current file
@@ -204,28 +203,29 @@ def process_profile(profile_path,format="text",column_mapping={}):
             columns=None,
             storage_options=None,
         )
-
+    MISSING_ALLELE = '0' # The label for a missing allele
+    MISSING_ALLELE_DISTANCE = 0 # The distance value for a missing allele
     columns = df.columns.values.tolist()
     column_dtypes = df.dtypes.tolist()
     is_correct_format = is_all_columns_int(column_dtypes)
-
     #If all columns are already integers then skip the extra processing steps
     if is_correct_format:
         return (column_mapping, df)
 
-    df = df.fillna('0')
-    df = df.replace('?', '0', regex=False)
-    df = df.replace(' ', '0', regex=False)
-    df = df.replace('-', '0', regex=False)
-    df = df.replace('', '0', regex=False)
+    df = df.fillna(MISSING_ALLELE)
+    df = df.replace('?', MISSING_ALLELE, regex=False)
+    df = df.replace(' ', MISSING_ALLELE, regex=False)
+    df = df.replace('-', MISSING_ALLELE, regex=False)
+    df = df.replace('', MISSING_ALLELE, regex=False)
 
     for column in columns:
         unique_col_values = sorted(df[column].unique().tolist())
         method = guess_format(List(unique_col_values))
+        converted_allele_codes = convert_allele_codes(unique_col_values, method, MISSING_ALLELE, MISSING_ALLELE_DISTANCE)
         if not column in column_mapping:
-            column_mapping[column] = convert_allele_codes(unique_col_values, method)
+            column_mapping[column] = converted_allele_codes
         else:
-            update_column_map(column_mapping[column], convert_allele_codes(unique_col_values, method))
+            update_column_map(column_mapping[column], converted_allele_codes, MISSING_ALLELE, MISSING_ALLELE_DISTANCE)
 
         df[column] = df[column].map(column_mapping[column])
     return (column_mapping, df)
