@@ -48,15 +48,14 @@ setup(
     },
 
     install_requires=[
-        'pyarrow==12.0.0',
+        'pyarrow>=12.0.0',
         'fastparquet==2023.4.0',
-        'numba==0.57.1',
-        'numpy==1.24.4',
-        'tables==3.8.0',
+        'numba>=0.57.1,<=0.61.2',
+        'numpy>=1.24.4,<2.0.0',
+        'tables>=3.8.0',
         'six>=1.16.0',
-        'pandas==2.0.2 ',
+        'pandas>=2.0.2',
         'psutil'
-
     ],
 
     entry_points={
