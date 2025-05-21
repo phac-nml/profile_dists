@@ -8,13 +8,14 @@ author = 'James Robertson'
 classifiers = """
 Development Status :: 4 - Beta
 Environment :: Console
-License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
 Intended Audience :: Science/Research
 Topic :: Scientific/Engineering
 Topic :: Scientific/Engineering :: Bio-Informatics
 Programming Language :: Python
 Programming Language :: Python :: 3.8
 Programming Language :: Python :: 3.9
+Programming Language :: Python :: 3.10
+Programming Language :: Python :: 3.11
 Programming Language :: Python :: Implementation :: CPython
 Operating System :: POSIX :: Linux
 """.strip().split('\n')
@@ -48,15 +49,14 @@ setup(
     },
 
     install_requires=[
-        'pyarrow==12.0.0',
-        'fastparquet==2023.4.0',
-        'numba==0.57.1',
-        'numpy==1.24.4',
-        'tables==3.8.0',
+        'pyarrow>=12.0.0',
+        'fastparquet>=2023.4.0',
+        'numba>=0.57.1,<=0.61.2',
+        'numpy>=1.24.4,<2.0.0',
+        'tables>=3.8.0',
         'six>=1.16.0',
-        'pandas==2.0.2 ',
+        'pandas>=2.0.2,<2.2.0',
         'psutil'
-
     ],
 
     entry_points={
