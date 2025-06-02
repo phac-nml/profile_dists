@@ -29,6 +29,7 @@ from profile_dists.utils import (
     get_missing_loci_counts,
     flag_samples,
     filter_samples,
+    init_combined_header
 )
 
 
@@ -218,7 +219,7 @@ def run_profile_dists(params):
             print(f"file {f} either does not exist or is too small to be valid")
             sys.exit()
 
-    allele_map = {}
+    allele_map = init_combined_header(query_profile,ref_profile)
     if allele_mapping_file is not None:
         with open(allele_mapping_file, "r", encoding="utf-8") as mapping_fh:
             allele_map = json.loads(mapping_fh.read())
