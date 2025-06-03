@@ -241,9 +241,13 @@ def process_profile(profile_path,format="text",column_mapping={}, missing_allele
     columns = df.columns.values.tolist()
     if len(column_mapping) > 0:
         missing_fields = list(set(column_mapping.keys()) - set(columns) )
+        dtype_change = {}
         for col in missing_fields:
             df[col] = missing_allele
+            dtype_change[col] = 'int64'
+            
         header = list(column_mapping.keys())
+        df = df.astype(dtype_change)
     else:
         header = columns
     df = df[header]
@@ -345,7 +349,6 @@ def get_distance_scaled(p1, p2):
         count_compared_sites+=1
         if v1 == v2:
             count_match+=1
-
     if count_compared_sites:
         return 100.0 * (float(count_compared_sites) - float(count_match)) / float(count_compared_sites)
     else:
