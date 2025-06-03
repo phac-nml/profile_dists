@@ -239,16 +239,15 @@ def process_profile(profile_path,format="text",column_mapping={}, missing_allele
             storage_options=None,
         )
     columns = df.columns.values.tolist()
-
     if len(column_mapping) > 0:
-        missing_fields = list(set(columns) - set(column_mapping.keys()))
+        missing_fields = list(set(column_mapping.keys()) - set(columns) )
         for col in missing_fields:
             df[col] = missing_allele
-        header = list(set(column_mapping.keys())) + missing_fields
+        header = list(column_mapping.keys())
     else:
         header = columns
-
     df = df[header]
+
     column_dtypes = df.dtypes.tolist()
     is_correct_format = is_all_columns_int(column_dtypes)
     #If all columns are already integers then skip the extra processing steps
