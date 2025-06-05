@@ -245,7 +245,7 @@ def process_profile(profile_path,format="text",column_mapping={}, missing_allele
         for col in missing_fields:
             df[col] = missing_allele
             dtype_change[col] = 'int64'
-            
+
         header = list(column_mapping.keys())
         df = df.astype(dtype_change)
     else:
@@ -257,12 +257,14 @@ def process_profile(profile_path,format="text",column_mapping={}, missing_allele
     #If all columns are already integers then skip the extra processing steps
     if is_correct_format:
         return (column_mapping, df)
-
+    print(df)
     df = df.fillna(missing_allele)
     df = df.replace('?', missing_allele, regex=False)
     df = df.replace(' ', missing_allele, regex=False)
     df = df.replace('-', missing_allele, regex=False)
     df = df.replace('', missing_allele, regex=False)
+    df = df.replace('_', missing_allele, regex=False)
+    print(df)
 
     for column in columns:
         unique_col_values = sorted(df[column].unique().tolist())
