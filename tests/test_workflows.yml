@@ -99,7 +99,7 @@
 - name: Address issue where samples have
   command: profile_dists --query tests/data/self-distance-profiles/self_distance_query_profile.tsv --ref tests/data/self-distance-profiles/self_distance_ref_profile.tsv --skip --outfmt pairwise --force --distm hamming --file_type text --missing_thresh 1.0 --sample_qual_thresh 1.0 -o self_address
   files:
-  - path: self-address/results.text
+  - path: self_address/results.text
     contains:
       - "query_id\tref_id\tdist"
       - "sample1\tsample1\t0"
