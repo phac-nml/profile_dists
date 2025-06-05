@@ -67,7 +67,7 @@
     contains:
       - '"ec5d7ff0545a93f0ef9e0a85044ccf1a": 1'
       - '"49316320ea9c8e18a34ae4c197463819": 2'
-    md5sum: 65076b0e2282a84e114fba39feca787f # tests/data/different_reference_query/expected-allele_map.json
+    md5sum: 3e241425ec41b9b1234762cd3ec28ef7 # tests/data/different_reference_query/expected-allele_map.json
 
 - name: Hamming distances and different samples in full reference and query files (no missing alleles) both MLST files were as query
   command: profile_dists --query tests/data/different_reference_query/profile_query_7.tsv --ref tests/data/different_reference_query/profile_reference_7.tsv --outfmt pairwise --force --distm hamming --file_type text --missing_thresh 1.0 --sample_qual_thresh 1.0 -o dist7
