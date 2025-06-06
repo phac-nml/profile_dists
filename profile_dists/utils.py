@@ -185,6 +185,38 @@ def filter_columns(df,columns_to_remove):
     return df.drop(columns_to_remove, axis=1)
 
 
+def get_header(profile_path,format='text', nrows=10):
+    df = pd.DataFrame()
+    if format=='text':
+        df = pd.read_csv(profile_path,header=0,sep="\t",index_col=0,low_memory=False,nrows=nrows)
+    elif format=='parquet':
+        df = pd.read_parquet(
+            profile_path,
+            engine='auto',
+            columns=None,
+            storage_options=None,
+            nrows=nrows
+        )
+    return list(df.columns)
+
+def combine_header(h1,h2):
+    combined = h1
+    for c in h2:
+        if c not in combined:
+            combined.append(c)
+    return combined
+
+def create_col_map(columns):
+    column_mapping ={}
+    for col in columns:
+        column_mapping[col] = {"0":0}
+    return column_mapping
+
+def init_combined_header(query_path,ref_path,format='text'):
+    h1 = get_header(query_path,format='text', nrows=1)
+    h2 = get_header(ref_path,format='text', nrows=1)
+    return create_col_map(combine_header(h1,h2))
+
 def process_profile(profile_path,format="text",column_mapping={}, missing_allele=MISSING_ALLELE):
     '''
     Reads in a file in (text, parquet) formats and applies processing to standardize the data and prepare it to be used
@@ -206,8 +238,20 @@ def process_profile(profile_path,format="text",column_mapping={}, missing_allele
             columns=None,
             storage_options=None,
         )
-
     columns = df.columns.values.tolist()
+    if len(column_mapping) > 0:
+        missing_fields = list(set(column_mapping.keys()) - set(columns) )
+        dtype_change = {}
+        for col in missing_fields:
+            df[col] = missing_allele
+            dtype_change[col] = 'int64'
+
+        header = list(column_mapping.keys())
+        df = df.astype(dtype_change)
+    else:
+        header = columns
+    df = df[header]
+
     column_dtypes = df.dtypes.tolist()
     is_correct_format = is_all_columns_int(column_dtypes)
     #If all columns are already integers then skip the extra processing steps
@@ -219,6 +263,7 @@ def process_profile(profile_path,format="text",column_mapping={}, missing_allele
     df = df.replace(' ', missing_allele, regex=False)
     df = df.replace('-', missing_allele, regex=False)
     df = df.replace('', missing_allele, regex=False)
+    df = df.replace('_', missing_allele, regex=False)
 
     for column in columns:
         unique_col_values = sorted(df[column].unique().tolist())
@@ -305,7 +350,6 @@ def get_distance_scaled(p1, p2):
         count_compared_sites+=1
         if v1 == v2:
             count_match+=1
-
     if count_compared_sites:
         return 100.0 * (float(count_compared_sites) - float(count_match)) / float(count_compared_sites)
     else:

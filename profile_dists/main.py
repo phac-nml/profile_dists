@@ -29,6 +29,7 @@ from profile_dists.utils import (
     get_missing_loci_counts,
     flag_samples,
     filter_samples,
+    init_combined_header
 )
 
 
@@ -218,7 +219,7 @@ def run_profile_dists(params):
             print(f"file {f} either does not exist or is too small to be valid")
             sys.exit()
 
-    allele_map = {}
+    allele_map = init_combined_header(query_profile,ref_profile)
     if allele_mapping_file is not None:
         with open(allele_mapping_file, "r", encoding="utf-8") as mapping_fh:
             allele_map = json.loads(mapping_fh.read())
@@ -347,6 +348,9 @@ def run_profile_dists(params):
         if len(cols_to_remove) > 0 and columns is None:
             qdf = filter_columns(qdf, cols_to_remove)
             rdf = filter_columns(rdf, cols_to_remove)
+    else:
+        qdf = filter_columns(qdf, qcols_to_remove)
+        rdf = filter_columns(rdf, rcols_to_remove)
 
     # convert profiles for fast dist calculations
     qlabels, qprofiles = convert_profiles(qdf)
@@ -416,6 +420,7 @@ def run_profile_dists(params):
     )
     sys.stdout.flush()
 
+ 
     # Data frames no longer needed
     del qdf
     del rdf
