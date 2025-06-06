@@ -264,7 +264,6 @@ def process_profile(profile_path,format="text",column_mapping={}, missing_allele
     df = df.replace('-', missing_allele, regex=False)
     df = df.replace('', missing_allele, regex=False)
     df = df.replace('_', missing_allele, regex=False)
-    print(df)
 
     for column in columns:
         unique_col_values = sorted(df[column].unique().tolist())
