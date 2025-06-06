@@ -257,7 +257,7 @@ def process_profile(profile_path,format="text",column_mapping={}, missing_allele
     #If all columns are already integers then skip the extra processing steps
     if is_correct_format:
         return (column_mapping, df)
-    print(df)
+
     df = df.fillna(missing_allele)
     df = df.replace('?', missing_allele, regex=False)
     df = df.replace(' ', missing_allele, regex=False)
