@@ -29,3 +29,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [1.0.4]: https://github.com/phac-nml/profile_dists/releases/tag/1.0.4
 [1.0.5]: https://github.com/phac-nml/profile_dists/releases/tag/1.0.5
 [1.0.6]: https://github.com/phac-nml/profile_dists/releases/tag/1.0.6
+[1.0.7]: https://github.com/phac-nml/profile_dists/releases/tag/1.0.7
