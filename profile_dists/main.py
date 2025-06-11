@@ -348,9 +348,6 @@ def run_profile_dists(params):
         if len(cols_to_remove) > 0 and columns is None:
             qdf = filter_columns(qdf, cols_to_remove)
             rdf = filter_columns(rdf, cols_to_remove)
-    #else:
-        #qdf = filter_columns(qdf, qcols_to_remove)
-        #rdf = filter_columns(rdf, rcols_to_remove)
 
     # convert profiles for fast dist calculations
     qlabels, qprofiles = convert_profiles(qdf)
