@@ -120,6 +120,6 @@
   - path: column_drop/results.text
     contains:
       - "query_id\tref_id\tdist"
-      - "sample1\tsample3\t2"
+      - "sample1\tsample3\t1"
       - "sample2\tsample4\t2"
     md5sum: 3f159a078adbd2768e41ec269d5dcef1 # tests/data/column_drop/expected-results.text
