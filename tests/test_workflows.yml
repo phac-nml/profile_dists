@@ -113,3 +113,13 @@
       - "query_id\tref_id\tdist"
       - "sample1\tsample1\t0"
     md5sum: d7a565d0d50bfefaa0835047009ce7d6 # tests/data/self-distance-profiles/self-distance-count-missing-results.text
+
+- name: Providing a column file to drop specific columns from distance calculation
+  command: profile_dists --query tests/data/column_drop/profile_concat_query.tsv --ref tests/data/column_drop/profile_concat_ref.tsv  --columns tests/data/column_drop/columns.txt --skip --count_missing --outfmt pairwise --force --distm hamming --file_type text --missing_thresh 1.0 --sample_qual_thresh 1.0 -o column_drop
+  files:
+  - path: column_drop/results.text
+    contains:
+      - "query_id\tref_id\tdist"
+      - "sample1\tsample3\t1"
+      - "sample2\tsample4\t2"
+    md5sum: 3f159a078adbd2768e41ec269d5dcef1 # tests/data/column_drop/expected-results.text
