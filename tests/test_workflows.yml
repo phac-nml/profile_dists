@@ -110,7 +110,7 @@
     md5sum: e19b4029ae5b339accd0c50b38a85766
 
 - name: Input identifiers are mixed
-  command: profile_dists --query tests/data/data_alphnumeric_ids.tsv --ref tests/data/data_alphanumeric_ids.tsv --outfmt matrix --force --distm hamming --file_type text --missing_thresh 1.0 --sample_qual_thresh 1.0 -o alphanumeric
+  command: profile_dists --query tests/data/data_alphanumeric_ids.tsv --ref tests/data/data_alphanumeric_ids.tsv --outfmt matrix --force --distm hamming --file_type text --missing_thresh 1.0 --sample_qual_thresh 1.0 -o alphanumeric
   files:
   - path: alphanumeric/results.text
     md5sum: e90a7de927966228510362507fa5b9ee
