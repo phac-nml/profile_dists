@@ -283,7 +283,7 @@ def convert_profiles(df):
     :param df: pandas df of integer allele profiles
     :return: (list,list) labels, numpy.arrays
     '''
-    labels = df.index.tolist()
+    labels = [str(x) for x in df.index.tolist()]
     profiles = []
     for index,row in df.iterrows():
         profiles.append(np.array(row.values.tolist()))
