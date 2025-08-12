@@ -95,3 +95,21 @@
       - "query_id\tref_id\tdist"
       - "sample1\tsample3\t7"
     md5sum: ad2bad2286c347068e77003800c1e670 # tests/data/different_reference_query/results11.text
+
+- name: Input identifiers are integers
+  command: profile_dists --query tests/data/data_integer_ids.tsv --ref tests/data/data_integer_ids.tsv --outfmt matrix --force --distm hamming --file_type text --missing_thresh 1.0 --sample_qual_thresh 1.0 -o integer
+  files:
+  - path: integer/results.text
+    md5sum: 1324e8b7b7298961f166fc835673e4f5
+
+- name: Input identifiers are numeric
+  command: profile_dists --query tests/data/data_numeric_ids.tsv --ref tests/data/data_numeric_ids.tsv --outfmt matrix --force --distm hamming --file_type text --missing_thresh 1.0 --sample_qual_thresh 1.0 -o numeric
+  files:
+  - path: numeric/results.text
+    md5sum: e19b4029ae5b339accd0c50b38a85766
+
+- name: Input identifiers are mixed
+  command: profile_dists --query tests/data/data_alphnumeric_ids.tsv --ref tests/data/data_alphanumeric_ids.tsv --outfmt matrix --force --distm hamming --file_type text --missing_thresh 1.0 --sample_qual_thresh 1.0 -o alphanumeric
+  files:
+  - path: alphanumeric/results.text
+    md5sum: e90a7de927966228510362507fa5b9ee
