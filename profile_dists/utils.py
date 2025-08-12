@@ -593,7 +593,7 @@ def calc_distances_hamming(query_profiles,query_labels,ref_profiles,ref_labels,p
     :return: None
     '''
     count = 0
-    columns = ["dists"] + ref_labels
+    columns = ["dists"] + [str(x) for x in ref_labels]
     num_query_profiles = len(query_profiles)
     num_ref_profiles = len(ref_profiles)
     dists = []
@@ -638,7 +638,7 @@ def calc_distances_hamming_missing(query_profiles,query_labels,ref_profiles,ref_
     :return: None
     '''
     count = 0
-    columns = ["dists"] + ref_labels
+    columns = ["dists"] + [str(x) for x in ref_labels]
     num_query_profiles = len(query_profiles)
     num_ref_profiles = len(ref_profiles)
     dists = []
