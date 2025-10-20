@@ -170,7 +170,7 @@ def test_process_profile():
 
 @pytest.mark.parametrize("test_input,expected", [
     ({'1': [1, 2, 3, 4], '2': [1, 2, 3, 4], '3': [1, 2, 3, 4]}, 
-    ([0, 1, 2, 3], [np.array([1, 1, 1]), np.array([2, 2, 2]), np.array([3,3,3]), np.array([4,4,4])])),
+    (['0', '1', '2', '3'], [np.array([1, 1, 1]), np.array([2, 2, 2]), np.array([3,3,3]), np.array([4,4,4])])),
 ])
 def test_convert_profiles(test_input, expected):
     """
