@@ -188,7 +188,10 @@ def filter_columns(df,columns_to_remove):
 def get_header(profile_path,format='text', nrows=10):
     df = pd.DataFrame()
     if format=='text':
-        df = pd.read_csv(profile_path,header=0,sep="\t",index_col=0,low_memory=False,nrows=nrows)
+        # Note that because of pandas bug, read_csv(index_col=0, dtype=str, ...) will generate
+        # an index column that isn't guaranteed to be strings. However, if we're only
+        # pulling the headers (which doesn't include the index), then this should be safe.
+        df = pd.read_csv(profile_path, header=0, sep="\t", index_col=0, low_memory=False, nrows=nrows, dtype=str)
     elif format=='parquet':
         df = pd.read_parquet(
             profile_path,
@@ -230,7 +233,17 @@ def process_profile(profile_path,format="text",column_mapping={}, missing_allele
 
     df = pd.DataFrame()
     if format=='text':
-        df = pd.read_csv(profile_path,header=0,sep="\t",index_col=0,low_memory=False)
+        df = pd.read_csv(profile_path, header=0, sep="\t", low_memory=False, dtype=str)
+
+        # There's a bug in some versions of pandas with the read_csv function.
+        # If you attempt pd.read_csv(dtype=str, index_col=0),
+        # then pandas will not cast the index to the specified type (str).
+        # We work around this by not loading an index, and then reshaping the
+        # DataFrame to have the index we want, which will be in str format.
+        index = df.iloc[:, 0]
+        df = df.iloc[:, 1:]
+        df = df.set_index(index)
+
     elif format=='parquet':
         df = pd.read_parquet(
             profile_path,
