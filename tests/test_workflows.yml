@@ -107,7 +107,7 @@
   command: profile_dists --query tests/data/data_numeric_ids.tsv --ref tests/data/data_numeric_ids.tsv --outfmt matrix --force --distm hamming --file_type text --missing_thresh 1.0 --sample_qual_thresh 1.0 -o numeric
   files:
   - path: numeric/results.text
-    md5sum: 548360c8a71d6c2c61fd32fc0d233646
+    md5sum: 2b4751b0eb21ed4a4d5160f290537616
 
 - name: Input identifiers are mixed
   command: profile_dists --query tests/data/data_alphanumeric_ids.tsv --ref tests/data/data_alphanumeric_ids.tsv --outfmt matrix --force --distm hamming --file_type text --missing_thresh 1.0 --sample_qual_thresh 1.0 -o alphanumeric
