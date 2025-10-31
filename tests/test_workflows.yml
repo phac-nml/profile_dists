@@ -98,10 +98,12 @@
 
 
 - name: Input identifiers are integers
+  tags:
+    - integer_ids
   command: profile_dists --query tests/data/data_integer_ids.tsv --ref tests/data/data_integer_ids.tsv --outfmt matrix --force --distm hamming --file_type text --missing_thresh 1.0 --sample_qual_thresh 1.0 -o integer
   files:
-  - path: integer/results.text
-    md5sum: 7441af29445cbb183e876e138936cf28
+    - path: integer/results.text
+      md5sum: 7441af29445cbb183e876e138936cf28
 
 - name: Input identifiers are numeric
   command: profile_dists --query tests/data/data_numeric_ids.tsv --ref tests/data/data_numeric_ids.tsv --outfmt matrix --force --distm hamming --file_type text --missing_thresh 1.0 --sample_qual_thresh 1.0 -o numeric
