@@ -122,7 +122,11 @@ def update_column_map(c1,c2, missing_allele=MISSING_ALLELE, missing_allele_dista
     :param c2: dict
     :return: dict
     '''
-    allele_id = max(list(c1.values()))+1
+    if len(c1) == 0:
+        allele_id = 1
+    else:
+        allele_id = max(list(c1.values()))+1
+
     for k in c2:
         if k == missing_allele:
             c1[k] = missing_allele_distance
@@ -212,7 +216,7 @@ def combine_header(h1,h2):
 def create_col_map(columns):
     column_mapping ={}
     for col in columns:
-        column_mapping[col] = {"0":0}
+        column_mapping[col] = {}
     return column_mapping
 
 def init_combined_header(query_path,ref_path,format='text'):
