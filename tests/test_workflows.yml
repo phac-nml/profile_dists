@@ -161,7 +161,7 @@
       md5sum: 1fb44811ce94f41ba8c241e6dc2abe86
 
 - name: Input identifiers are numeric, loci are strings
-  command: profile_dists --query tests/data/data_numeric_ids.tsv --ref tests/data/data_numeric_ids.tsv --outfmt matrix --force --distm hamming --file_type text --missing_thresh 1.0 --sample_qual_thresh 1.0 -o numeric
+  command: profile_dists --query tests/data/data_numeric_ids_string_loci.tsv --ref tests/data/data_numeric_ids_string_loci.tsv --outfmt matrix --force --distm hamming --file_type text --missing_thresh 1.0 --sample_qual_thresh 1.0 -o numeric
   tags:
     - numeric_ids_loci_strings
   files:
