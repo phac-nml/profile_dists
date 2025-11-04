@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.10] - 2025/10/31
 
+### Changed
+
+- Removed the unused `"0": 0` from allele maps.
+
 ### Fixed
 
 - Further changes to fix a problem where numeric identifiers (sample IDs) were being treated as numeric data types (int, float) instead of strings.
