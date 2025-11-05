@@ -140,13 +140,11 @@ def is_all_columns_int(column_dtypes):
     :param column_dtypes: List of Pandas column dtypes
     :return: True if all columns are of an integer type
     '''
-    count_non_int = 0
+
     for col in column_dtypes:
-        if col in VALID_INT_TYPES:
-            continue
-        count_non_int+=1
-    if count_non_int > 0:
-        return False
+        if col not in VALID_INT_TYPES:
+            return False
+
     return True
 
 def count_missing_data(df):
@@ -214,7 +212,7 @@ def combine_header(h1,h2):
     return combined
 
 def create_col_map(columns):
-    column_mapping ={}
+    column_mapping = {}
     for col in columns:
         column_mapping[col] = {}
     return column_mapping
@@ -234,7 +232,6 @@ def process_profile(profile_path,format="text",column_mapping={}, missing_allele
     :param column_mapping: Previous allele code mapping to apply to the current file
     :return: (dict, pd)
     '''
-
     df = pd.DataFrame()
     if format=='text':
         df = pd.read_csv(profile_path, header=0, sep="\t", low_memory=False, dtype=str)
@@ -287,9 +284,9 @@ def process_profile(profile_path,format="text",column_mapping={}, missing_allele
         method = guess_format(List(unique_col_values))
         converted_allele_codes = convert_allele_codes(unique_col_values, method)
         if not column in column_mapping:
-            column_mapping[column] = converted_allele_codes
-        else:
-            update_column_map(column_mapping[column], converted_allele_codes)
+            column_mapping[column] = {}
+
+        update_column_map(column_mapping[column], converted_allele_codes)
 
         df[column] = df[column].map(column_mapping[column])
     return (column_mapping, df)

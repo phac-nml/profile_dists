@@ -32,7 +32,6 @@ from profile_dists.utils import (
     init_combined_header
 )
 
-
 def parse_args():
     """Argument Parsing method.
 
