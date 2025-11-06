@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Removed the unused `"0": 0` from allele maps.
+- Removed the unused `"0": 0` from allele maps. [PR 46](https://github.com/phac-nml/profile_dists/pull/46)
 
 ### Fixed
 
-- Further changes to fix a problem where numeric identifiers (sample IDs) were being treated as numeric data types (int, float) instead of strings.
+- Further changes to fix a problem where numeric identifiers (sample IDs) were being treated as numeric data types (int, float) instead of strings. [PR 46](https://github.com/phac-nml/profile_dists/pull/46)
 
 ## [1.0.9] - 2025/10/22
 
