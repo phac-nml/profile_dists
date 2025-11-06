@@ -252,3 +252,43 @@
         - "sample1\tsample3\t1"
         - "sample2\tsample4\t2"
       md5sum: 3f159a078adbd2768e41ec269d5dcef1 # tests/data/column_drop/expected-results.text
+
+- name: Mixed IDs, Mixed Loci, Missing Loci, Don't Count Missing
+  command: profile_dists --query tests/data/data_mixed_ids_missing_loci.tsv --ref tests/data/data_mixed_ids_missing_loci.tsv --outfmt matrix --force --distm hamming --file_type text --missing_thresh 1.0 --sample_qual_thresh 1.0 -o results
+  tags:
+    - mixed_ids_mixed_loci_missing_loci_dont_count_missing
+  files:
+    - path: "results/results.text"
+      contains:
+        - "dists\tA\t1\t2\t3.0\tB\tC\t4.1\t4.2\t4\t5\t6.5"
+        - "A\t0\t0\t0\t0\t0\t0\t0\t0\t0\t1\t1"
+        - "1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t1\t1"
+        - "2\t0\t0\t0\t0\t0\t0\t0\t0\t0\t1\t1"
+        - "3.0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0"
+        - "B\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0"
+        - "C\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0"
+        - "4.1\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0"
+        - "4.2\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0"
+        - "4\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t0"
+        - "5\t1\t1\t1\t0\t0\t0\t0\t0\t0\t0\t0"
+        - "6.5\t1\t1\t1\t0\t0\t0\t0\t0\t0\t0\t0"
+
+- name: Mixed IDs, Mixed Loci, Missing Loci, Count Missing
+  command: profile_dists --query tests/data/data_mixed_ids_missing_loci.tsv --ref tests/data/data_mixed_ids_missing_loci.tsv --outfmt matrix --force --distm hamming --file_type text --missing_thresh 1.0 --sample_qual_thresh 1.0 -o results --count_missing
+  tags:
+    - mixed_ids_mixed_loci_missing_loci_count_missing
+  files:
+    - path: "results/results.text"
+      contains:
+        - "dists\tA\t1\t2\t3.0\tB\tC\t4.1\t4.2\t4\t5\t6.5"
+        - "A\t0\t0\t1\t2\t2\t2\t3\t3\t2\t2\t2"
+        - "1\t0\t0\t1\t2\t2\t2\t3\t3\t2\t2\t2"
+        - "2\t1\t1\t0\t1\t1\t1\t2\t2\t3\t3\t3"
+        - "3.0\t2\t2\t1\t0\t0\t0\t1\t1\t2\t3\t3"
+        - "B\t2\t2\t1\t0\t0\t0\t1\t1\t2\t3\t3"
+        - "C\t2\t2\t1\t0\t0\t0\t1\t1\t2\t3\t3"
+        - "4.1\t3\t3\t2\t1\t1\t1\t0\t0\t1\t2\t2"
+        - "4.2\t3\t3\t2\t1\t1\t1\t0\t0\t1\t2\t2"
+        - "4\t2\t2\t3\t2\t2\t2\t1\t1\t0\t1\t1"
+        - "5\t2\t2\t3\t3\t3\t3\t2\t2\t1\t0\t0"
+        - "6.5\t2\t2\t3\t3\t3\t3\t2\t2\t1\t0\t0"
