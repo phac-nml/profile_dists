@@ -3,6 +3,22 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.10] - 2025/11/05
+
+### Changed
+
+- Removed the unused `"0": 0` from allele maps. [PR 46](https://github.com/phac-nml/profile_dists/pull/46)
+
+### Fixed
+
+- Further changes to fix a problem where numeric identifiers (sample IDs) were being treated as numeric data types (int, float) instead of strings. [PR 46](https://github.com/phac-nml/profile_dists/pull/46)
+
+## [1.0.9] - 2025/10/22
+
+### Fixed
+
+- A problem where numeric identifiers were being treated as numbers (rather than strings). [PR #42](https://github.com/phac-nml/profile_dists/pull/42)
+
 ## [1.0.8] - 2025/06/11
 
 ### `Fixed`
@@ -41,3 +57,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [1.0.6]: https://github.com/phac-nml/profile_dists/releases/tag/1.0.6
 [1.0.7]: https://github.com/phac-nml/profile_dists/releases/tag/1.0.7
 [1.0.8]: https://github.com/phac-nml/profile_dists/releases/tag/1.0.8
+[1.0.9]: https://github.com/phac-nml/profile_dists/releases/tag/1.0.9
+[1.0.10]: https://github.com/phac-nml/profile_dists/releases/tag/1.0.10

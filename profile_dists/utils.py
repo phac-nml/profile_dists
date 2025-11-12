@@ -122,7 +122,11 @@ def update_column_map(c1,c2, missing_allele=MISSING_ALLELE, missing_allele_dista
     :param c2: dict
     :return: dict
     '''
-    allele_id = max(list(c1.values()))+1
+    if len(c1) == 0:
+        allele_id = 1
+    else:
+        allele_id = max(list(c1.values()))+1
+
     for k in c2:
         if k == missing_allele:
             c1[k] = missing_allele_distance
@@ -136,13 +140,11 @@ def is_all_columns_int(column_dtypes):
     :param column_dtypes: List of Pandas column dtypes
     :return: True if all columns are of an integer type
     '''
-    count_non_int = 0
+
     for col in column_dtypes:
-        if col in VALID_INT_TYPES:
-            continue
-        count_non_int+=1
-    if count_non_int > 0:
-        return False
+        if col not in VALID_INT_TYPES:
+            return False
+
     return True
 
 def count_missing_data(df):
@@ -188,7 +190,10 @@ def filter_columns(df,columns_to_remove):
 def get_header(profile_path,format='text', nrows=10):
     df = pd.DataFrame()
     if format=='text':
-        df = pd.read_csv(profile_path,header=0,sep="\t",index_col=0,low_memory=False,nrows=nrows)
+        # Note that because of pandas bug, read_csv(index_col=0, dtype=str, ...) will generate
+        # an index column that isn't guaranteed to be strings. However, if we're only
+        # pulling the headers (which doesn't include the index), then this should be safe.
+        df = pd.read_csv(profile_path, header=0, sep="\t", index_col=0, low_memory=False, nrows=nrows, dtype=str)
     elif format=='parquet':
         df = pd.read_parquet(
             profile_path,
@@ -207,9 +212,9 @@ def combine_header(h1,h2):
     return combined
 
 def create_col_map(columns):
-    column_mapping ={}
+    column_mapping = {}
     for col in columns:
-        column_mapping[col] = {"0":0}
+        column_mapping[col] = {}
     return column_mapping
 
 def init_combined_header(query_path,ref_path,format='text'):
@@ -227,10 +232,19 @@ def process_profile(profile_path,format="text",column_mapping={}, missing_allele
     :param column_mapping: Previous allele code mapping to apply to the current file
     :return: (dict, pd)
     '''
-
     df = pd.DataFrame()
     if format=='text':
-        df = pd.read_csv(profile_path,header=0,sep="\t",index_col=0,low_memory=False)
+        df = pd.read_csv(profile_path, header=0, sep="\t", low_memory=False, dtype=str)
+
+        # There's a bug in some versions of pandas with the read_csv function.
+        # If you attempt pd.read_csv(dtype=str, index_col=0),
+        # then pandas will not cast the index to the specified type (str).
+        # We work around this by not loading an index, and then reshaping the
+        # DataFrame to have the index we want, which will be in str format.
+        index = df.iloc[:, 0]
+        df = df.iloc[:, 1:]
+        df = df.set_index(index)
+
     elif format=='parquet':
         df = pd.read_parquet(
             profile_path,
@@ -270,9 +284,9 @@ def process_profile(profile_path,format="text",column_mapping={}, missing_allele
         method = guess_format(List(unique_col_values))
         converted_allele_codes = convert_allele_codes(unique_col_values, method)
         if not column in column_mapping:
-            column_mapping[column] = converted_allele_codes
-        else:
-            update_column_map(column_mapping[column], converted_allele_codes)
+            column_mapping[column] = {}
+
+        update_column_map(column_mapping[column], converted_allele_codes)
 
         df[column] = df[column].map(column_mapping[column])
     return (column_mapping, df)
