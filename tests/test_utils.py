@@ -288,11 +288,11 @@ def test_if_file_ok():
 
 
 @pytest.mark.parametrize("labels,distances,threshold,expected,equivalent", [
-    (["1", "2", "3"], [1, 2, 3], 1, {"1": 1}, True),
-    (["1", "2", "3"], [1, 2, 3], 1, {"1": 1, "2": 2, "3": 3}, False),
-    (["1", "2", "3"], [4, 5, 6], 1, {}, True),
-    (["1", "2", "3"], [1, 2, 3], 0, {"1": 1, "2": 2, "3": 3}, False),
-    (["1", "2", "3"], [1, 2, 3], 1.1, {"1": 1}, True),
+    (np.array(["1", "2", "3"]), np.array([1, 2, 3]), 1, {"1": 1}, True),
+    (np.array(["1", "2", "3"]), np.array([1, 2, 3]), 1, {"1": 1, "2": 2, "3": 3}, False),
+    (np.array(["1", "2", "3"]), np.array([4, 5, 6]), 1, {}, True),
+    (np.array(["1", "2", "3"]), np.array([1, 2, 3]), 0, {"1": 1, "2": 2, "3": 3}, False),
+    (np.array(["1", "2", "3"]), np.array([1, 2, 3]), 1.1, {"1": 1}, True),
 
 ])
 def test_filter_dists(labels, distances, threshold, expected, equivalent):
@@ -372,4 +372,4 @@ def test_filter_samples(labels, profiles, labels_remove, expected_labels, expect
     labels, profiles = utils.filter_samples(labels, profiles, labels_remove)
     assert expected_labels == labels
     for k, v in  zip(expected_profiles, profiles):
-        assert np.alltrue(k == v)
+        assert np.all(k == v)

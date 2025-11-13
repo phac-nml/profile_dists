@@ -32,7 +32,6 @@ from profile_dists.utils import (
     init_combined_header
 )
 
-
 def parse_args():
     """Argument Parsing method.
 
@@ -296,7 +295,7 @@ def run_profile_dists(params):
         rcols_to_remove = rcols - set(common_cols)
     else:
         if os.path.isfile(columns):
-            columns = pd.read_csv(columns, header=None).iloc[:, 0].tolist()
+            columns = pd.read_csv(columns, header=None, dtype=str).iloc[:, 0].tolist()
         else:
             columns = columns.split(",")
 
