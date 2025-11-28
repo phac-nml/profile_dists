@@ -182,7 +182,11 @@ Profile dists supports several different formats as input:
 ├── allele_map.json - Mapping of allele hash string to integer id, can be use for reruning of analyses or masking specific alleles
 ├── query_profile.{text|parquet}  - Standardized allele profile for query sequences
 ├── ref_profile.{text|parquet}  - Standardized allele profile for reference sequences
-├── results.{text|parquet} - Either symmetric distance matrix or three column file of [query_id, ref_if, distance]
+├── results.{text|parquet} - Distance results.
+│   When --outfmt matrix this is a symmetric distance matrix (wide format, one row per
+│   query and one column per reference). When --outfmt pairwise this is a three-column
+│   table [query_id, ref_id, dist]. For --file_type parquet the same layouts are
+│   written as parquet files (wide matrix parquet vs long pairwise parquet).
 └── run.json - Contains logging information for the run including parameters and quality information
 ```
 

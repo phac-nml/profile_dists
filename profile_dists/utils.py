@@ -6,6 +6,7 @@ import fastparquet as fp
 from numba import jit
 from numba.typed import List
 import pyarrow.parquet as pq
+import pyarrow as pa
 import re
 import sys
 import gc
@@ -252,6 +253,9 @@ def process_profile(profile_path,format="text",column_mapping={}, missing_allele
             columns=None,
             storage_options=None,
         )
+        # Ensure all values and the index are strings for consistent downstream handling
+        df = df.astype(str)
+        df.index = df.index.astype(str)
     columns = df.columns.values.tolist()
     if len(column_mapping) > 0:
         missing_fields = list(set(column_mapping.keys()) - set(columns) )
@@ -751,47 +755,185 @@ def format_pairwise_dist(df,threshold=-1):
     return pd.DataFrame(results)
 
 
-def write_dist_results(mat,outfile,outtype,outfmt,batch_size=1,threshold=-1):
-    '''
-    Writes the distance results into a matrix or pairwise distance result file
-    :param mat: string path to distance matrix file
-    :param outfile: string path for results to be written to
-    :param outtype: string (pairwise, matrix)
-    :param outfmt: string (text, parquet) file type of output file
-    :param batch_size: int number of records to process concurrently
-    :param threshold: int/float to filter results (only applies to pairwise)
-    :return: None
-    '''
 
-    #If the desired output is a matrix in parquet format simply rename the mat file
+def write_dist_results(mat, outfile, outtype, outfmt, batch_size=1, threshold=-1):
+    """
+    Write distance results from the intermediate matrix parquet to the requested
+    output format and layout.
+
+    Parameters
+    ----------
+    mat : str
+        Path to the intermediate distance matrix parquet file.
+    outfile : str
+        Path where the final results file will be written.
+    outtype : {"pairwise", "matrix"}
+        Logical layout of the output. "matrix" is a wide matrix with one row per
+        query and one column per reference. "pairwise" is a long table with
+        columns [query_id, ref_id, dist].
+    outfmt : {"text", "parquet"}
+        File format for the output (TSV text or parquet).
+    batch_size : int, optional
+        Number of rows to process per parquet batch when streaming.
+    threshold : float, optional
+        Optional distance threshold; only rows with distances less than or equal
+        to this value are retained for pairwise output. Ignored for matrix
+        output.
+    """
+    # If the desired output is a matrix in parquet format simply rename the
+    # intermediate matrix file.
     if outtype == 'matrix' and outfmt == 'parquet':
-        os.rename(mat,outfile)
+        os.rename(mat, outfile)
         return
+
+    # If the user requested a pairwise parquet file, derive a long-format
+    # parquet directly from the intermediate matrix parquet and return.
+    if outtype == 'pairwise' and outfmt == 'parquet':
+        write_pairwise_parquet_from_matrix_parquet(
+            mat,
+            outfile,
+            threshold=threshold,
+            batch_size=batch_size,
+        )
+        return
+
+    # For all remaining cases we stream over the matrix parquet and emit either
+    # a text matrix or a text pairwise file.
     init_file = True
     parquet_file = pq.ParquetFile(mat)
+
     for batch in parquet_file.iter_batches(batch_size):
         batch_df = batch.to_pandas()
-        del (batch)
+        del batch
+
         if outtype == 'pairwise':
             batch_df = format_pairwise_dist(batch_df, threshold=threshold)
+
         if init_file:
             init_file = False
             if outfmt == 'text' and outtype == 'matrix':
-                batch_df.to_csv(outfile,index = False, header = True, sep="\t")
+                batch_df.to_csv(outfile, index=False, header=True, sep="\t")
             elif outfmt == 'text' and outtype == 'pairwise':
                 batch_df.to_csv(outfile, index=False, header=True, sep="\t")
             else:
-                if not os.path.isfile(outfile):
-                    fp.write(outfile, batch_df, compression='GZIP')
+                # Fallback parquet writer for non-matrix parquet output
+                fp.write(outfile, batch_df, compression='GZIP')
         else:
             if outfmt == 'text' and outtype == 'matrix':
-                batch_df.to_csv(outfile, mode ='a', index = False, header = False, sep="\t")
+                batch_df.to_csv(
+                    outfile,
+                    mode='a',
+                    index=False,
+                    header=False,
+                    sep="\t",
+                )
             elif outfmt == 'text' and outtype == 'pairwise':
-                batch_df.to_csv(outfile, mode ='a', index = False, header = False, sep="\t")
+                batch_df.to_csv(
+                    outfile,
+                    mode='a',
+                    index=False,
+                    header=False,
+                    sep="\t",
+                )
             else:
-                fp.write(parquet_file, batch_df, append=True, compression='GZIP')
+                fp.write(outfile, batch_df, append=True, compression='GZIP')
 
 
+def write_pairwise_parquet_from_matrix_parquet(
+    mat, outfile, threshold=-1.0, batch_size=1,
+):
+    """
+    Convert a wide matrix parquet produced by the distance calculation stage
+    into a long-format pairwise parquet file.
+
+    The input parquet (``mat``) is expected to have the first column containing
+    the query sample identifiers and the remaining columns containing distances
+    to each reference sample.
+
+    Parameters
+    ----------
+    mat : str
+        Path to the intermediate distance matrix parquet file.
+    outfile : str
+        Path where the pairwise parquet file will be written.
+    threshold : float, optional
+        Optional distance threshold; only distances less than or equal to this
+        value are written when a non-negative value is provided. When -1
+        (default), all distances are reported.
+    batch_size : int, optional
+        Number of rows to process per parquet batch when streaming.
+    """
+    parquet_file = pq.ParquetFile(mat)
+
+    schema = pa.schema(
+        [
+            ("query_id", pa.string()),
+            ("ref_id", pa.string()),
+            ("dist", pa.float32()),
+        ]
+    )
+
+    writer = None
+    try:
+        for batch in parquet_file.iter_batches(batch_size):
+            columns = batch.schema.names
+            if not columns:
+                continue
+
+            # First column contains the query/sample identifiers
+            query_ids = batch.column(0).to_numpy(zero_copy_only=False)
+
+            # Remaining columns correspond to reference IDs
+            ref_ids = np.array(columns[1:], dtype=object)
+            if ref_ids.size == 0:
+                continue
+
+            # Build a dense 2D NumPy array of distances with shape (rows, n_refs)
+            dist_cols = []
+            for col_idx in range(1, len(columns)):
+                col = batch.column(col_idx).to_numpy(zero_copy_only=False)
+                dist_cols.append(col)
+            dist_block = np.vstack(dist_cols).T
+
+            q_list = []
+            r_list = []
+            d_list = []
+
+            for i, qid in enumerate(query_ids):
+                row = dist_block[i, :]
+                if threshold >= 0:
+                    mask = row <= threshold
+                else:
+                    mask = np.ones_like(row, dtype=bool)
+
+                if not mask.any():
+                    continue
+
+                selected_refs = ref_ids[mask]
+                selected_dists = row[mask]
+
+                q_list.extend([str(qid)] * len(selected_refs))
+                r_list.extend(selected_refs.astype(str).tolist())
+                d_list.extend(selected_dists.astype("float32").tolist())
+
+            if not q_list:
+                continue
+
+            table = pa.table(
+                {
+                    "query_id": pa.array(q_list, type=pa.string()),
+                    "ref_id": pa.array(r_list, type=pa.string()),
+                    "dist": pa.array(d_list, type=pa.float32()),
+                },
+                schema=schema,
+            )
+
+            if writer is None:
+                writer = pq.ParquetWriter(outfile, schema=schema)
+            writer.write_table(table)
+    finally:
+        if writer is not None:
+            writer.close()
 def get_missing_loci_counts(profiles,labels,count_loci):
     '''
     Counts the % missing data by sample

@@ -7,7 +7,7 @@ from argparse import (
 )
 import json
 import os
-from multiprocessing import Pool, cpu_count
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import pandas as pd
 import pyarrow.parquet as pq
@@ -180,6 +180,14 @@ def parse_args():
 
 
 def run_profile_dists(params):
+    """
+    Run the profile_dists pipeline for the given set of parameters.
+
+    Parameters
+    ----------
+    params : dict
+        Dictionary of command-line arguments as produced by ``vars(parse_args())``.
+    """
     query_profile = params["query"]
     ref_profile = params["ref"]
     outdir = params["outdir"]
@@ -201,7 +209,7 @@ def run_profile_dists(params):
     try:
         sys_num_cpus = len(os.sched_getaffinity(0))
     except AttributeError:
-        sys_num_cpus = cpu_count()
+        sys_num_cpus = os.cpu_count() or 1
 
     if num_cpus > sys_num_cpus:
         num_cpus = sys_num_cpus
@@ -405,6 +413,9 @@ def run_profile_dists(params):
     sys.stdout.flush()
 
     # write updated profiles
+    # Ensure profiles are sorted by sample name (index) before writing
+    qdf = qdf.sort_index()
+    rdf = rdf.sort_index()
     print("Writting updated profiles to disk")
     write_profiles(qdf, os.path.join(outdir, f"query_profile.{file_type}"), file_type)
     run_data["query_profile_info"]["parsed_file_path"] = os.path.join(
@@ -436,89 +447,81 @@ def run_profile_dists(params):
     print(f"Using a batch size of {batch_size}")
     sys.stdout.flush()
 
-    pool = Pool(processes=num_cpus)
+
     q = copy.deepcopy(qlabels)
     tracker = 0
-    results = []
+    futures = []
 
     # compute distances
     print("Calculating distances")
     dist_files = []
-    while q:
-        qlabel_chunk, q = q[:batch_size], q[batch_size:]
-        qprofile_chunk, qprofiles = qprofiles[:batch_size], qprofiles[batch_size:]
-        dist_matrix_file = os.path.join(outdir, "dists.{}.parquet".format(tracker))
-        if os.path.isfile(dist_matrix_file):
-            os.remove(dist_matrix_file)
-        tracker += 1
-        dist_files.append(dist_matrix_file)
-        if count_missing_sites:
-            if dist_method == "scaled":
-                results.append(
-                    pool.apply_async(
-                        calc_distances_scaled_missing,
-                        (
+
+    with ThreadPoolExecutor(max_workers=num_cpus) as executor:
+        while q:
+            qlabel_chunk, q = q[:batch_size], q[batch_size:]
+            qprofile_chunk, qprofiles = qprofiles[:batch_size], qprofiles[batch_size:]
+            dist_matrix_file = os.path.join(outdir, "dists.{}.parquet".format(tracker))
+            if os.path.isfile(dist_matrix_file):
+                os.remove(dist_matrix_file)
+            tracker += 1
+            dist_files.append(dist_matrix_file)
+
+            if count_missing_sites:
+                if dist_method == "scaled":
+                    futures.append(
+                        executor.submit(
+                            calc_distances_scaled_missing,
                             qprofile_chunk,
                             qlabel_chunk,
                             rprofiles,
                             rlabels,
                             dist_matrix_file,
                             batch_size,
-                        ),
+                        )
                     )
-                )
+                else:
+                    futures.append(
+                        executor.submit(
+                            calc_distances_hamming_missing,
+                            qprofile_chunk,
+                            qlabel_chunk,
+                            rprofiles,
+                            rlabels,
+                            dist_matrix_file,
+                            batch_size,
+                        )
+                    )
             else:
-                results.append(
-                    pool.apply_async(
-                        calc_distances_hamming_missing,
-                        (
+                if dist_method == "scaled":
+                    futures.append(
+                        executor.submit(
+                            calc_distances_scaled,
                             qprofile_chunk,
                             qlabel_chunk,
                             rprofiles,
                             rlabels,
                             dist_matrix_file,
                             batch_size,
-                        ),
+                        )
                     )
-                )
-        else:
-            if dist_method == "scaled":
-                results.append(
-                    pool.apply_async(
-                        calc_distances_scaled,
-                        (
+                else:
+                    futures.append(
+                        executor.submit(
+                            calc_distances_hamming,
                             qprofile_chunk,
                             qlabel_chunk,
                             rprofiles,
                             rlabels,
                             dist_matrix_file,
                             batch_size,
-                        ),
+                        )
                     )
-                )
-            else:
-                results.append(
-                    pool.apply_async(
-                        calc_distances_hamming,
-                        (
-                            qprofile_chunk,
-                            qlabel_chunk,
-                            rprofiles,
-                            rlabels,
-                            dist_matrix_file,
-                            batch_size,
-                        ),
-                    )
-                )
-    pool.close()
-    pool.join()
+
+        # Ensure all tasks complete and propagate any exceptions
+        for fut in futures:
+            fut.result()
+
     sys.stdout.flush()
-
-    # Get results
-    r = []
-    for x in results:
-        r.append(x.get())
-
     dist_matrix_file = os.path.join(outdir, "dists.parquet")
 
     # Merge files into single distance matrix
