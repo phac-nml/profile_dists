@@ -3,7 +3,7 @@ import psutil
 import pandas as pd
 import numpy as np
 import fastparquet as fp
-from numba import jit
+from numba import jit, njit
 from numba.typed import List
 import pyarrow.parquet as pq
 import pyarrow as pa
@@ -504,191 +504,271 @@ def get_file_length(f):
     return int(os.popen(f'wc -l {f}').read().split()[0])
 
 
-def calc_distances_scaled(query_profiles,query_labels,ref_profiles,ref_labels,parquet_file,batch_size=1):
-    '''
-    Calculates pairwise distances between ref and query with the distances scaled according to the number of alleles
-    considered between two samples with missing data ignored
-    :param query_profiles: list of integer numpy profiles
-    :param query_labels:  list of data labels for query
-    :param ref_profiles: list of integer numpy profiles
-    :param ref_labels: list of data labels for ref
-    :param parquet_file: string path
-    :param batch_size: int number of records to process concurrently
-    :return: None
-    '''
+def calc_distances_scaled(query_profiles, query_labels, ref_profiles, ref_labels, parquet_file, batch_size=1):
+    """
+    Calculate pairwise scaled distances between query and reference profiles.
 
+    The distances are expressed as percentages (0–100) and missing data (encoded
+    as 0) is ignored when computing the proportion of matching alleles.
+
+    Parameters
+    ----------
+    query_profiles : list of numpy.ndarray
+        List of integer-encoded query profiles (1D arrays of equal length).
+    query_labels : list of str
+        List of query sample identifiers corresponding to ``query_profiles``.
+    ref_profiles : list of numpy.ndarray
+        List of integer-encoded reference profiles.
+    ref_labels : list of str
+        List of reference sample identifiers corresponding to ``ref_profiles``.
+    parquet_file : str
+        Path to the output parquet file for this batch.
+    batch_size : int, optional
+        Number of query records to include per I/O batch when writing results.
+
+    Returns
+    -------
+    None
+        Results are written to ``parquet_file`` in parquet format.
+    """
     count = 0
     columns = ["dists"] + [str(x) for x in ref_labels]
     num_query_profiles = len(query_profiles)
     num_ref_profiles = len(ref_profiles)
+
+    if num_query_profiles == 0 or num_ref_profiles == 0:
+        return
+
+    # Build dense blocks for efficient Numba-based computation.
+    q_block = np.vstack(query_profiles).astype(np.int32)
+    r_block = np.vstack(ref_profiles).astype(np.int32)
+
+    dist_block = _numba_scaled_block_ignore_missing(q_block, r_block)
+
     dists = []
 
-    #Clear an existing file as this can cause unexpected behaviour
-    if os.path.isfile(parquet_file):
-        os.remove(parquet_file)
-
-    for i in range(0, num_query_profiles):
-        d = [ query_labels[i] ]
-        for k in range(0, num_ref_profiles):
-                d.append(get_distance_scaled(query_profiles[i], ref_profiles[k]))
-        dists.append(d)
+    for i in range(num_query_profiles):
+        row = [query_labels[i]]
+        row.extend(dist_block[i, :].tolist())
+        dists.append(row)
         count += 1
 
         if count == batch_size:
-            sys.stderr.write(f"{i} batch\n")
             df = pd.DataFrame(dists, columns=columns)
             if not os.path.isfile(parquet_file):
-                sys.stderr.write(f"write\n")
-                fp.write(parquet_file, df, compression='GZIP')
+                fp.write(parquet_file, df, compression="GZIP")
             else:
-                sys.stderr.write(f"append\n")
-                fp.write(parquet_file, df, append=True, compression='GZIP')
-            del(df)
+                fp.write(parquet_file, df, append=True, compression="GZIP")
+            del df
             dists = []
             count = 0
             gc.collect()
 
-    df = pd.DataFrame(dists, columns=columns)
-    if not os.path.isfile(parquet_file):
-        fp.write(parquet_file, df, compression='GZIP')
-    else:
-        fp.write(parquet_file, df, append=True, compression='GZIP')
+    if dists:
+        df = pd.DataFrame(dists, columns=columns)
+        if not os.path.isfile(parquet_file):
+            fp.write(parquet_file, df, compression="GZIP")
+        else:
+            fp.write(parquet_file, df, append=True, compression="GZIP")
 
-def calc_distances_scaled_missing(query_profiles,query_labels,ref_profiles,ref_labels,parquet_file,batch_size=1):
-    '''
-    Calculates pairwise distances between ref and query with the distances scaled according to the number of alleles
-    considered between two samples with missing data counted as a difference
-    :param query_profiles: list of integer numpy profiles
-    :param query_labels:  list of data labels for query
-    :param ref_profiles: list of integer numpy profiles
-    :param ref_labels: list of data labels for ref
-    :param parquet_file: string path
-    :param batch_size: int number of records to process concurrently
-    :return: None
-    '''
+def calc_distances_scaled_missing(query_profiles, query_labels, ref_profiles, ref_labels, parquet_file, batch_size=1):
+    """
+    Calculate pairwise scaled distances counting missing data as differences.
+
+    The distances are expressed as percentages (0–100) and missing data
+    (encoded as 0) is treated the same as any other allele when computing the
+    proportion of matching alleles.
+
+    Parameters
+    ----------
+    query_profiles : list of numpy.ndarray
+        List of integer-encoded query profiles (1D arrays of equal length).
+    query_labels : list of str
+        List of query sample identifiers corresponding to ``query_profiles``.
+    ref_profiles : list of numpy.ndarray
+        List of integer-encoded reference profiles.
+    ref_labels : list of str
+        List of reference sample identifiers corresponding to ``ref_profiles``.
+    parquet_file : str
+        Path to the output parquet file for this batch.
+    batch_size : int, optional
+        Number of query records to include per I/O batch when writing results.
+
+    Returns
+    -------
+    None
+        Results are written to ``parquet_file`` in parquet format.
+    """
     count = 0
     columns = ["dists"] + [str(x) for x in ref_labels]
     num_query_profiles = len(query_profiles)
     num_ref_profiles = len(ref_profiles)
+
+    if num_query_profiles == 0 or num_ref_profiles == 0:
+        return
+
+    q_block = np.vstack(query_profiles).astype(np.int32)
+    r_block = np.vstack(ref_profiles).astype(np.int32)
+
+    dist_block = _numba_scaled_block_missing_as_diff(q_block, r_block)
+
     dists = []
 
-    #Clear an existing file as this can cause unexpected behaviour
-    if os.path.isfile(parquet_file):
-        os.remove(parquet_file)
-
-    for i in range(0, num_query_profiles):
-        d = [ query_labels[i] ]
-        for k in range(0, num_ref_profiles):
-            d.append(get_distance_scaled_missing(query_profiles[i], ref_profiles[k]))
-
-        dists.append(d)
+    for i in range(num_query_profiles):
+        row = [query_labels[i]]
+        row.extend(dist_block[i, :].tolist())
+        dists.append(row)
         count += 1
 
         if count == batch_size:
             df = pd.DataFrame(dists, columns=columns)
             if not os.path.isfile(parquet_file):
-                fp.write(parquet_file, df, compression='GZIP')
+                fp.write(parquet_file, df, compression="GZIP")
             else:
-                fp.write(parquet_file, df, append=True, compression='GZIP')
+                fp.write(parquet_file, df, append=True, compression="GZIP")
+            del df
             dists = []
             count = 0
+            gc.collect()
 
-    df = pd.DataFrame(dists, columns=columns)
-    if not os.path.isfile(parquet_file):
-        fp.write(parquet_file, df, compression='GZIP')
-    else:
-        fp.write(parquet_file, df, append=True, compression='GZIP')
+    if dists:
+        df = pd.DataFrame(dists, columns=columns)
+        if not os.path.isfile(parquet_file):
+            fp.write(parquet_file, df, compression="GZIP")
+        else:
+            fp.write(parquet_file, df, append=True, compression="GZIP")
 
-def calc_distances_hamming(query_profiles,query_labels,ref_profiles,ref_labels,parquet_file,batch_size=1):
-    '''
-    Calculates pairwise hamming distances between ref and query with missing data ignored
-    :param query_profiles: list of integer numpy profiles
-    :param query_labels:  list of data labels for query
-    :param ref_profiles: list of integer numpy profiles
-    :param ref_labels: list of data labels for ref
-    :param parquet_file: string path
-    :param batch_size: int number of records to process concurrently
-    :return: None
-    '''
+def calc_distances_hamming(query_profiles, query_labels, ref_profiles, ref_labels, parquet_file, batch_size=1):
+    """
+    Calculate pairwise Hamming distances ignoring missing data.
+
+    Missing data (encoded as 0) is skipped when counting differences between
+    alleles.
+
+    Parameters
+    ----------
+    query_profiles : list of numpy.ndarray
+        List of integer-encoded query profiles (1D arrays of equal length).
+    query_labels : list of str
+        List of query sample identifiers corresponding to ``query_profiles``.
+    ref_profiles : list of numpy.ndarray
+        List of integer-encoded reference profiles.
+    ref_labels : list of str
+        List of reference sample identifiers corresponding to ``ref_profiles``.
+    parquet_file : str
+        Path to the output parquet file for this batch.
+    batch_size : int, optional
+        Number of query records to include per I/O batch when writing results.
+
+    Returns
+    -------
+    None
+        Results are written to ``parquet_file`` in parquet format.
+    """
     count = 0
     columns = ["dists"] + [str(x) for x in ref_labels]
     num_query_profiles = len(query_profiles)
     num_ref_profiles = len(ref_profiles)
+
+    if num_query_profiles == 0 or num_ref_profiles == 0:
+        return
+
+    q_block = np.vstack(query_profiles).astype(np.int32)
+    r_block = np.vstack(ref_profiles).astype(np.int32)
+
+    dist_block = _numba_hamming_block_ignore_missing(q_block, r_block)
+
     dists = []
 
-    #Clear an existing file as this can cause unexpected behaviour
-    if os.path.isfile(parquet_file):
-        os.remove(parquet_file)
-
-    for i in range(0, num_query_profiles):
-        d = [ query_labels[i] ]
-        for k in range(0, num_ref_profiles):
-            d.append(get_distance_raw(query_profiles[i], ref_profiles[k]))
-
-        dists.append(d)
+    for i in range(num_query_profiles):
+        row = [query_labels[i]]
+        row.extend(dist_block[i, :].tolist())
+        dists.append(row)
         count += 1
 
         if count == batch_size:
             df = pd.DataFrame(dists, columns=columns)
             if not os.path.isfile(parquet_file):
-                fp.write(parquet_file, df, compression='GZIP')
+                fp.write(parquet_file, df, compression="GZIP")
             else:
-                fp.write(parquet_file, df, append=True, compression='GZIP')
+                fp.write(parquet_file, df, append=True, compression="GZIP")
+            del df
             dists = []
             count = 0
+            gc.collect()
 
-    df = pd.DataFrame(dists, columns=columns)
-    if not os.path.isfile(parquet_file):
-        fp.write(parquet_file, df, compression='GZIP')
-    else:
-        fp.write(parquet_file, df, append=True, compression='GZIP')
+    if dists:
+        df = pd.DataFrame(dists, columns=columns)
+        if not os.path.isfile(parquet_file):
+            fp.write(parquet_file, df, compression="GZIP")
+        else:
+            fp.write(parquet_file, df, append=True, compression="GZIP")
 
+def calc_distances_hamming_missing(query_profiles, query_labels, ref_profiles, ref_labels, parquet_file, batch_size=1):
+    """
+    Calculate pairwise Hamming distances counting missing data as differences.
 
-def calc_distances_hamming_missing(query_profiles,query_labels,ref_profiles,ref_labels,parquet_file,batch_size=1):
-    '''
-    Calculates pairwise hamming distances between ref and query with  with missing data counted as differences
-    :param query_profiles: list of integer numpy profiles
-    :param query_labels:  list of data labels for query
-    :param ref_profiles: list of integer numpy profiles
-    :param ref_labels: list of data labels for ref
-    :param parquet_file: string path
-    :param batch_size: int number of records to process concurrently
-    :return: None
-    '''
+    Missing data (encoded as 0) is treated the same as any other allele when
+    counting differences between alleles.
+
+    Parameters
+    ----------
+    query_profiles : list of numpy.ndarray
+        List of integer-encoded query profiles (1D arrays of equal length).
+    query_labels : list of str
+        List of query sample identifiers corresponding to ``query_profiles``.
+    ref_profiles : list of numpy.ndarray
+        List of integer-encoded reference profiles.
+    ref_labels : list of str
+        List of reference sample identifiers corresponding to ``ref_profiles``.
+    parquet_file : str
+        Path to the output parquet file for this batch.
+    batch_size : int, optional
+        Number of query records to include per I/O batch when writing results.
+
+    Returns
+    -------
+    None
+        Results are written to ``parquet_file`` in parquet format.
+    """
     count = 0
     columns = ["dists"] + [str(x) for x in ref_labels]
     num_query_profiles = len(query_profiles)
     num_ref_profiles = len(ref_profiles)
+
+    if num_query_profiles == 0 or num_ref_profiles == 0:
+        return
+
+    q_block = np.vstack(query_profiles).astype(np.int32)
+    r_block = np.vstack(ref_profiles).astype(np.int32)
+
+    dist_block = _numba_hamming_block_missing_as_diff(q_block, r_block)
+
     dists = []
 
-    #Clear an existing file as this can cause unexpected behaviour
-    if os.path.isfile(parquet_file):
-        os.remove(parquet_file)
-
-    for i in range(0, num_query_profiles):
-        d = [ query_labels[i] ]
-        for k in range(0, num_ref_profiles):
-            d.append(get_distance_raw_missing(query_profiles[i], ref_profiles[k]))
-        dists.append(d)
+    for i in range(num_query_profiles):
+        row = [query_labels[i]]
+        row.extend(dist_block[i, :].tolist())
+        dists.append(row)
         count += 1
 
         if count == batch_size:
             df = pd.DataFrame(dists, columns=columns)
             if not os.path.isfile(parquet_file):
-                fp.write(parquet_file, df, compression='GZIP')
+                fp.write(parquet_file, df, compression="GZIP")
             else:
-                fp.write(parquet_file, df, append=True, compression='GZIP')
+                fp.write(parquet_file, df, append=True, compression="GZIP")
+            del df
             dists = []
             count = 0
+            gc.collect()
 
-    df = pd.DataFrame(dists, columns=columns)
-    if not os.path.isfile(parquet_file):
-        fp.write(parquet_file, df, compression='GZIP')
-    else:
-        fp.write(parquet_file, df, append=True, compression='GZIP')
-
-
-
+    if dists:
+        df = pd.DataFrame(dists, columns=columns)
+        if not os.path.isfile(parquet_file):
+            fp.write(parquet_file, df, compression="GZIP")
+        else:
+            fp.write(parquet_file, df, append=True, compression="GZIP")
 
 def is_file_ok(f):
     '''
@@ -977,4 +1057,143 @@ def filter_samples(labels,profiles,labels_to_remove):
         l.append(label)
         p.append(profiles[idx])
     return l, p
+
+
+
+@njit
+def _numba_scaled_block_ignore_missing(q_block, r_block):
+    """Compute scaled percent distance (0–100) ignoring missing (value 0).
+
+    Parameters
+    ----------
+    q_block : numpy.ndarray
+        2D array of integer-encoded query profiles with shape (n_query, n_loci).
+    r_block : numpy.ndarray
+        2D array of integer-encoded reference profiles with shape (n_ref, n_loci).
+
+    Returns
+    -------
+    numpy.ndarray
+        2D array of float32 distances with shape (n_query, n_ref).
+    """
+    n_query, n_loci = q_block.shape
+    n_ref = r_block.shape[0]
+    out = np.empty((n_query, n_ref), dtype=np.float32)
+    for i in range(n_query):
+        for j in range(n_ref):
+            count_compared = 0
+            count_match = 0
+            for k in range(n_loci):
+                v1 = q_block[i, k]
+                v2 = r_block[j, k]
+                if v1 == 0 or v2 == 0:
+                    continue
+                count_compared += 1
+                if v1 == v2:
+                    count_match += 1
+            if count_compared > 0:
+                out[i, j] = 100.0 - (100.0 * (count_match / count_compared))
+            else:
+                out[i, j] = 100.0
+    return out
+
+
+@njit
+def _numba_hamming_block_ignore_missing(q_block, r_block):
+    """Compute Hamming distances ignoring missing (value 0).
+
+    Parameters
+    ----------
+    q_block : numpy.ndarray
+        2D array of integer-encoded query profiles with shape (n_query, n_loci).
+    r_block : numpy.ndarray
+        2D array of integer-encoded reference profiles with shape (n_ref, n_loci).
+
+    Returns
+    -------
+    numpy.ndarray
+        2D array of float32 distances with shape (n_query, n_ref).
+    """
+    n_query, n_loci = q_block.shape
+    n_ref = r_block.shape[0]
+    out = np.empty((n_query, n_ref), dtype=np.float32)
+    for i in range(n_query):
+        for j in range(n_ref):
+            diff_count = 0
+            for k in range(n_loci):
+                v1 = q_block[i, k]
+                v2 = r_block[j, k]
+                if v1 == 0 or v2 == 0:
+                    continue
+                if v1 != v2:
+                    diff_count += 1
+            out[i, j] = diff_count
+    return out
+
+
+@njit
+def _numba_scaled_block_missing_as_diff(q_block, r_block):
+    """Compute scaled percent distance (0–100) counting missing as differences.
+
+    Parameters
+    ----------
+    q_block : numpy.ndarray
+        2D array of integer-encoded query profiles with shape (n_query, n_loci).
+    r_block : numpy.ndarray
+        2D array of integer-encoded reference profiles with shape (n_ref, n_loci).
+
+    Returns
+    -------
+    numpy.ndarray
+        2D array of float32 distances with shape (n_query, n_ref).
+    """
+    n_query, n_loci = q_block.shape
+    n_ref = r_block.shape[0]
+    out = np.empty((n_query, n_ref), dtype=np.float32)
+    for i in range(n_query):
+        for j in range(n_ref):
+            count_compared = 0
+            count_match = 0
+            for k in range(n_loci):
+                v1 = q_block[i, k]
+                v2 = r_block[j, k]
+                count_compared += 1
+                if v1 == v2:
+                    count_match += 1
+            if count_compared > 0:
+                out[i, j] = 100.0 - (100.0 * (count_match / count_compared))
+            else:
+                out[i, j] = 100.0
+    return out
+
+
+@njit
+def _numba_hamming_block_missing_as_diff(q_block, r_block):
+    """Compute Hamming distances counting missing as differences.
+
+    Parameters
+    ----------
+    q_block : numpy.ndarray
+        2D array of integer-encoded query profiles with shape (n_query, n_loci).
+    r_block : numpy.ndarray
+        2D array of integer-encoded reference profiles with shape (n_ref, n_loci).
+
+    Returns
+    -------
+    numpy.ndarray
+        2D array of float32 distances with shape (n_query, n_ref).
+    """
+    n_query, n_loci = q_block.shape
+    n_ref = r_block.shape[0]
+    out = np.empty((n_query, n_ref), dtype=np.float32)
+    for i in range(n_query):
+        for j in range(n_ref):
+            diff_count = 0
+            for k in range(n_loci):
+                v1 = q_block[i, k]
+                v2 = r_block[j, k]
+                if v1 != v2:
+                    diff_count += 1
+            out[i, j] = diff_count
+    return out
 
